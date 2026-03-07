@@ -21,7 +21,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.res.stringResource
 import com.example.androidapp.R
+import com.example.androidapp.domain.util.ScoreUtil
+import com.example.androidapp.ui.theme.GoldStar
 import com.example.androidapp.ui.theme.QuizCodeTheme
+import com.example.androidapp.ui.theme.Success
 
 /**
  * Displays the quiz result with score, percentage, star rating, and detailed stats.
@@ -42,8 +45,8 @@ fun ScoreCard(
     timeTaken: String? = null,
     modifier: Modifier = Modifier
 ) {
-    val percentage = if (maxScore > 0) (score * 100) / maxScore else 0
-    val starRating = calculateStarRating(percentage)
+    val percentage = ScoreUtil.calculatePercentage(score, maxScore)
+    val starRating = ScoreUtil.calculateStarRating(percentage)
 
     ElevatedCard(
         modifier = modifier.fillMaxWidth(),
@@ -139,7 +142,7 @@ private fun StarRating(
                 contentDescription = null,
                 modifier = Modifier.size(32.dp),
                 tint = if (index < rating) {
-                    Color(0xFFFFD700) // Gold color
+                    GoldStar
                 } else {
                     MaterialTheme.colorScheme.outlineVariant
                 }
@@ -182,12 +185,12 @@ private fun StatsRow(
                     Icon(
                         imageVector = Icons.Default.Check,
                         contentDescription = stringResource(R.string.correct_label),
-                        tint = Color(0xFF4CAF50) // Green
+                        tint = Success
                     )
                 },
                 label = stringResource(R.string.correct_label),
                 value = correctCount.toString(),
-                valueColor = Color(0xFF4CAF50)
+                valueColor = Success
             )
 
             // Divider
@@ -262,20 +265,6 @@ private fun StatItem(
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-    }
-}
-
-/**
- * Calculates star rating (0-5) based on percentage score.
- */
-private fun calculateStarRating(percentage: Int): Int {
-    return when {
-        percentage >= 90 -> 5
-        percentage >= 80 -> 4
-        percentage >= 60 -> 3
-        percentage >= 40 -> 2
-        percentage >= 20 -> 1
-        else -> 0
     }
 }
 
