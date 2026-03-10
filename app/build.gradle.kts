@@ -96,8 +96,10 @@ dependencies {
 
     // Coroutines
     implementation(libs.kotlinx.coroutines.play.services)
-// Show Image from URL
-    implementation("io.coil-kt:coil-compose:2.5.0")
+
+    // Coil - Image loading from URL
+    implementation(libs.coil.compose)
+
     // Gson (for Room type converters)
     implementation(libs.gson)
 
