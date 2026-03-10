@@ -5,7 +5,7 @@
 set -e  # Exit on error
 
 text="=================================================================
-Firebase Backend Deployment Script, Made by Nimonht with luv  ❤️
+Firebase Backend Deployment Script, Made by Nimonht
 ================================================================="
 colors=(31 33 32 36 34 35)
 i=0
@@ -145,7 +145,7 @@ if [ "$DOCKER_AVAILABLE" = true ]; then
             ;;
     esac
 else
-    echo -e "${YELLOW}⚠ Docker not detected – using native Firebase CLI${NC}"
+    echo -e "${YELLOW}WARNING: Docker not detected – using native Firebase CLI${NC}"
 fi
 
 # ---------------------------------------------------------------------------

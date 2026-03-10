@@ -189,10 +189,10 @@ app/src/main/java/com/example/androidapp/
 - Nếu cần dữ liệu mẫu/preview, vẫn dùng chuỗi tiếng Việt (ưu tiên lấy từ `strings.xml`).
 
 ```kotlin
-// ✅ ĐÚNG
+// CORRECT
 Text(text = stringResource(R.string.home_greeting))
 
-// ❌ SAI
+// WRONG
 Text("Hello!")
 ```
 
@@ -203,21 +203,21 @@ Text("Hello!")
 ### 3.1 MVVM Pattern
 
 ```kotlin
-// ✅ CORRECT: ViewModel manages UI state
+// CORRECT: ViewModel manages UI state
 class HomeViewModel(
     private val quizRepository: QuizRepository
 ) : ViewModel() {
-    
+
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
-    
+
     fun onEvent(event: HomeEvent) {
         when (event) {
             is HomeEvent.LoadQuizzes -> loadQuizzes()
             is HomeEvent.RefreshData -> refreshData()
         }
     }
-    
+
     private fun loadQuizzes() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
@@ -230,7 +230,7 @@ class HomeViewModel(
     }
 }
 
-// ❌ WRONG: UI logic in composable
+// WRONG: UI logic in composable
 @Composable
 fun HomeScreen() {
     val quizzes = remember { mutableStateListOf<Quiz>() }
@@ -325,7 +325,7 @@ fun QuizCard(
 ### 4.2 State Hoisting
 
 ```kotlin
-// ✅ CORRECT: Stateless component with hoisted state
+// CORRECT: Stateless component with hoisted state
 @Composable
 fun CodeInputField(
     value: String,
@@ -339,7 +339,7 @@ fun CodeInputField(
     )
 }
 
-// ❌ WRONG: Component manages its own state
+// WRONG: Component manages its own state
 @Composable
 fun CodeInputField(
     modifier: Modifier = Modifier
@@ -523,7 +523,19 @@ class QuizCardTest {
 
 ## 8. Code Quality Rules
 
-### 8.1 Required for All PRs
+### 8.1 No Emojis in Code
+
+- **Never use emojis** in source code, including:
+  - Code comments
+  - String literals (except user-facing text that explicitly requires emojis)
+  - Shell scripts
+  - Configuration files
+  - Log messages
+  - Error messages
+- Use plain text descriptions instead
+- Emojis can cause encoding issues, reduce readability in certain environments, and are not professional in production code
+
+### 8.2 Required for All PRs
 
 - [ ] Code compiles without errors
 - [ ] No compiler warnings (or documented exceptions)

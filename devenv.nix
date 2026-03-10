@@ -91,14 +91,14 @@
     # Build tools
     buildTools.version = [ "35.0.0" "34.0.0" ];
 
-    # System images for emulator
+    # System images for emulator (empty - emulator disabled)
     systemImages = [];
 
     # Platform tools
     platformTools.enable = true;
 
-    # Emulator
-    emulator.enable = true;
+    # Emulator (disabled since no system images)
+    emulator.enable = false;
 
     # Accept licenses
     acceptLicense = true;
@@ -110,12 +110,12 @@
 
   enterShell = ''
     echo ""
-    echo "🚀 AndroidApp Development Environment"
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "AndroidApp Development Environment"
+    echo "======================================"
     echo ""
-    echo "📱 Android SDK: $ANDROID_HOME"
-    echo "☕ Java: $(java -version 2>&1 | head -n 1)"
-    echo "🔥 Firebase CLI: $(firebase --version)"
+    echo "Android SDK: $ANDROID_HOME"
+    echo "Java: $(java -version 2>&1 | head -n 1)"
+    echo "Firebase CLI: $(firebase --version)"
     echo ""
     echo "Available scripts:"
     echo "  build-debug        - Build debug APK"

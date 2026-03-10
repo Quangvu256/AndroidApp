@@ -4,14 +4,9 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
-    devenv.url = "github:cachix/devenv";
-    android-nixpkgs = {
-      url = "github:tadfisher/android-nixpkgs";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
   };
 
-  outputs = { self, nixpkgs, flake-utils, devenv, android-nixpkgs }:
+  outputs = { self, nixpkgs, flake-utils }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs {
@@ -22,21 +17,20 @@
           };
         };
 
+        # Build tools version used across the configuration
+        buildToolsVersion = "35.0.0";
+
         # Android SDK configuration
         androidComposition = pkgs.androidenv.composeAndroidPackages {
           toolsVersion = "26.1.1";
           platformToolsVersion = "35.0.1";
-          buildToolsVersions = [ "35.0.0" "34.0.0" ];
-          includeEmulator = true;
-          emulatorVersion = "35.1.20";
+          buildToolsVersions = [ buildToolsVersion "34.0.0" ];
+          includeEmulator = false;
           platformVersions = [ "36" "35" "34" ];
           includeSources = false;
           includeSystemImages = false;
-          systemImageTypes = [ "google_apis_playstore" ];
-          abiVersions = [ "x86_64" "arm64-v8a" ];
           cmakeVersions = [ "3.22.1" ];
           includeNDK = false;
-          ndkVersions = [ "26.1.10909125" ];
           useGoogleAPIs = false;
           useGoogleTVAddOns = false;
           includeExtras = [
@@ -49,6 +43,11 @@
         # JDK 17 as required by the project
         jdk = pkgs.jdk17;
 
+        # Additional development tools
+        gradle = pkgs.gradle;
+        git = pkgs.git;
+        nodejs = pkgs.nodejs_20;
+
         # Firebase CLI for local development and deployment
         firebaseCli = pkgs.firebase-tools;
 
@@ -56,19 +55,19 @@
       {
         # Development shell for direct use with `nix develop`
         devShells.default = pkgs.mkShell {
-          buildInputs = with pkgs; [
+          buildInputs = [
             jdk
             androidSdk
             firebaseCli
             gradle
             git
-            nodejs_20
+            nodejs
             # Useful development tools
-            which
-            gnused
-            gawk
-            gnugrep
-            findutils
+            pkgs.which
+            pkgs.gnused
+            pkgs.gawk
+            pkgs.gnugrep
+            pkgs.findutils
           ];
 
           shellHook = ''
@@ -76,7 +75,7 @@
             export ANDROID_HOME="${androidSdk}/libexec/android-sdk"
             export ANDROID_SDK_ROOT="$ANDROID_HOME"
             export PATH="$ANDROID_HOME/tools:$ANDROID_HOME/tools/bin:$ANDROID_HOME/platform-tools:$PATH"
-            export GRADLE_OPTS="-Dorg.gradle.project.android.aapt2FromMavenOverride=$ANDROID_HOME/build-tools/35.0.0/aapt2"
+            export GRADLE_OPTS="-Dorg.gradle.project.android.aapt2FromMavenOverride=$ANDROID_HOME/build-tools/${buildToolsVersion}/aapt2"
 
             echo "Android development environment loaded"
             echo "  JAVA_HOME: $JAVA_HOME"
@@ -108,7 +107,7 @@
         };
 
         # Home Manager module for integration
-        homeManagerModules.default = { config, lib, pkgs, ... }: {
+        homeManagerModules.default = { config, lib, ... }: {
           options.programs.androidapp = {
             enable = lib.mkEnableOption "AndroidApp development environment";
           };
@@ -118,7 +117,9 @@
               jdk
               androidSdk
               firebaseCli
-              pkgs.gradle
+              gradle
+              git
+              nodejs
             ];
 
             home.sessionVariables = {

@@ -105,8 +105,7 @@ nix profile install nixpkgs#devenv
 # Enter devenv shell
 devenv shell
 
-# Or use direnv
-echo "use flake" > .envrc
+# Or use direnv (a .envrc file is already present)
 direnv allow
 ```
 
