@@ -61,6 +61,70 @@ app/src/main/java/com/example/androidapp/
 - Android SDK 36
 - Firebase project configured
 
+### Option 1: Traditional Setup
+
+Follow the standard Android development setup with Android Studio and manual SDK installation.
+
+### Option 2: Nix Setup (Recommended for Nix Users)
+
+If you're using Nix or NixOS, you can use the provided `flake.nix` for a reproducible development environment.
+
+#### Using with `nix develop`
+
+```bash
+# Enter development shell
+nix develop
+
+# Or with direnv (recommended)
+direnv allow
+```
+
+#### Using with Home Manager
+
+Add to your Home Manager configuration:
+
+```nix
+{
+  imports = [
+    # Path to the AndroidApp flake
+    inputs.androidapp.homeManagerModules.default
+  ];
+
+  programs.androidapp.enable = true;
+}
+```
+
+#### Using with devenv
+
+This project includes `devenv.nix` configuration:
+
+```bash
+# Install devenv if not already installed
+nix profile install nixpkgs#devenv
+
+# Enter devenv shell
+devenv shell
+
+# Or use direnv
+echo "use flake" > .envrc
+direnv allow
+```
+
+The Nix environment includes:
+- JDK 17
+- Android SDK (API levels 34, 35, 36)
+- Gradle build tool
+- Firebase CLI
+- Node.js 20 (for Firebase tools)
+
+Available devenv scripts:
+- `build-debug` - Build debug APK
+- `build-release` - Build release APK
+- `test` - Run unit tests
+- `lint` - Run lint checks
+- `clean` - Clean build artifacts
+- `firebase-emulators` - Start Firebase emulators
+
 ## Getting Started
 
 ### 1. Clone the repository
