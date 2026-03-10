@@ -69,8 +69,7 @@
     },
     {
       "content": "Which of the following are programming languages?",
-      "_comment_mediaUrl": "Note: URLs should point to Cloudflare R2 bucket, not Firebase Storage",
-      "mediaUrl": "https://your-bucket.r2.dev/quiz-media/prog-langs.png",
+      "mediaUrl": "",
       "explanation": "Python, Java, and JavaScript are all programming languages",
       "points": 10,
       "position": 1,
