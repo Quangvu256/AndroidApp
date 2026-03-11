@@ -8,6 +8,9 @@ import com.example.androidapp.data.local.dao.PendingSyncDao
 import com.example.androidapp.data.local.dao.QuestionDao
 import com.example.androidapp.data.local.dao.QuizDao
 import com.example.androidapp.data.local.dao.UserDao
+import com.example.androidapp.domain.repository.AttemptRepository
+import com.example.androidapp.domain.repository.AuthRepository
+import com.example.androidapp.domain.repository.QuizRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
@@ -33,5 +36,8 @@ interface AppContainer {
     val userDao: UserDao
     val pendingSyncDao: PendingSyncDao
 
-    // Add repositories and other dependencies here as needed
+    // Repositories
+    val authRepository: AuthRepository
+    val quizRepository: QuizRepository
+    val attemptRepository: AttemptRepository
 }

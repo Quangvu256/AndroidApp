@@ -6,5 +6,6 @@ data class UserDto(
     @DocumentId val id: String = "",
     val email: String = "",
     val displayName: String = "",
+    val username: String = "",
     val photoUrl: String? = null
 )

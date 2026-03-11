@@ -17,10 +17,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.androidapp.R
+import com.example.androidapp.di.LocalAppContainer
 
 /**
- * Login screen with email/password fields and Google sign-in.
+ * Login screen with email/password fields.
+ * Stateless composable; all state is owned by [AuthViewModel].
  *
  * @param onLoginSuccess Callback when login is successful.
  * @param onNavigateToRegister Callback to navigate to registration screen.
@@ -32,11 +38,36 @@ fun LoginScreen(
     onNavigateToRegister: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val container = LocalAppContainer
+    val viewModel: AuthViewModel = viewModel(
+        factory = object : ViewModelProvider.Factory {
+            @Suppress("UNCHECKED_CAST")
+            override fun <T : ViewModel> create(modelClass: Class<T>): T =
+                AuthViewModel(container.authRepository) as T
+        }
+    )
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
 
-    Scaffold(modifier = modifier) { innerPadding ->
+    LaunchedEffect(uiState) {
+        if (uiState is AuthUiState.Authenticated) onLoginSuccess()
+    }
+
+    val snackbarHostState = remember { SnackbarHostState() }
+    LaunchedEffect(uiState) {
+        if (uiState is AuthUiState.Error) {
+            snackbarHostState.showSnackbar((uiState as AuthUiState.Error).message)
+            viewModel.onEvent(AuthEvent.ClearError)
+        }
+    }
+
+    Scaffold(
+        modifier = modifier,
+        snackbarHost = { SnackbarHost(snackbarHostState) }
+    ) { innerPadding ->
         Column(
             modifier = Modifier
                 .padding(innerPadding)
@@ -108,21 +139,23 @@ fun LoginScreen(
 
             // Login button
             Button(
-                onClick = {
-                    // TODO: Implement actual login with Firebase
-                    onLoginSuccess()
-                },
+                onClick = { viewModel.onEvent(AuthEvent.Login(email, password)) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
                 shape = RoundedCornerShape(12.dp),
                 enabled = email.isNotBlank() && password.isNotBlank()
                         && android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
+                        && uiState !is AuthUiState.Loading
             ) {
-                Text(
-                    text = stringResource(R.string.login),
-                    style = MaterialTheme.typography.titleMedium
-                )
+                if (uiState is AuthUiState.Loading) {
+                    CircularProgressIndicator(modifier = Modifier.size(20.dp))
+                } else {
+                    Text(
+                        text = stringResource(R.string.login),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))

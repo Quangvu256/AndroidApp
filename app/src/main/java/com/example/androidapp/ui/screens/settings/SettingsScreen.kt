@@ -2,16 +2,20 @@ package com.example.androidapp.ui.screens.settings
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.androidapp.R
 import com.example.androidapp.ui.components.forms.SwitchToggle
 import com.example.androidapp.ui.components.navigation.AppTopBar
 
 /**
  * Settings screen with grouped options and toggles.
+ * Stateless composable; all state is owned by [SettingsViewModel].
  *
  * @param onNavigateBack Callback to navigate back.
  * @param modifier Modifier for styling.
@@ -21,9 +25,8 @@ fun SettingsScreen(
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var notificationsEnabled by remember { mutableStateOf(true) }
-    var darkModeEnabled by remember { mutableStateOf(false) }
-    var autoSyncEnabled by remember { mutableStateOf(true) }
+    val viewModel: SettingsViewModel = viewModel()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     Scaffold(
         modifier = modifier,
@@ -45,8 +48,10 @@ fun SettingsScreen(
             // Notifications Section
             SettingsSection(title = stringResource(R.string.settings_section_notifications)) {
                 SwitchToggle(
-                    checked = notificationsEnabled,
-                    onCheckedChange = { notificationsEnabled = it },
+                    checked = uiState.notificationsEnabled,
+                    onCheckedChange = {
+                        viewModel.onEvent(SettingsEvent.NotificationsToggled(it))
+                    },
                     label = stringResource(R.string.settings_push_notifications),
                     description = stringResource(R.string.settings_push_notifications_desc)
                 )
@@ -55,8 +60,8 @@ fun SettingsScreen(
             // Appearance Section
             SettingsSection(title = stringResource(R.string.settings_section_appearance)) {
                 SwitchToggle(
-                    checked = darkModeEnabled,
-                    onCheckedChange = { darkModeEnabled = it },
+                    checked = uiState.darkModeEnabled,
+                    onCheckedChange = { viewModel.onEvent(SettingsEvent.DarkModeToggled(it)) },
                     label = stringResource(R.string.settings_dark_mode),
                     description = stringResource(R.string.settings_dark_mode_desc)
                 )
@@ -65,8 +70,8 @@ fun SettingsScreen(
             // Data Section
             SettingsSection(title = stringResource(R.string.settings_section_data_sync)) {
                 SwitchToggle(
-                    checked = autoSyncEnabled,
-                    onCheckedChange = { autoSyncEnabled = it },
+                    checked = uiState.autoSyncEnabled,
+                    onCheckedChange = { viewModel.onEvent(SettingsEvent.AutoSyncToggled(it)) },
                     label = stringResource(R.string.settings_auto_sync),
                     description = stringResource(R.string.settings_auto_sync_desc)
                 )

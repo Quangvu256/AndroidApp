@@ -7,17 +7,23 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.androidapp.R
+import com.example.androidapp.di.LocalAppContainer
 
 /**
  * Profile screen showing user information and settings menu.
- * Shows login prompt for guests.
+ * Stateless composable; all state is owned by [ProfileViewModel].
  *
  * @param onNavigateToLogin Callback to navigate to login screen.
  * @param onNavigateToSettings Callback to navigate to settings screen.
@@ -31,48 +37,51 @@ fun ProfileScreen(
     onNavigateToSettings: () -> Unit,
     onNavigateToHistory: () -> Unit,
     onNavigateToTrash: () -> Unit,
-    isLoggedIn: Boolean,
-    displayName: String?,
-    email: String?,
-    avatarInitial: String?,
-    onLogout: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val container = LocalAppContainer
+    val viewModel: ProfileViewModel = viewModel(
+        factory = object : ViewModelProvider.Factory {
+            @Suppress("UNCHECKED_CAST")
+            override fun <T : ViewModel> create(modelClass: Class<T>): T =
+                ProfileViewModel(container.authRepository) as T
+        }
+    )
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
     Column(
         modifier = modifier
             .fillMaxSize()
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
-        if (isLoggedIn) {
-            // Logged in user view
+        if (uiState.isLoggedIn && uiState.user != null) {
+            val user = uiState.user!!
+            val avatarInitial = user.displayName.firstOrNull()?.toString()
+                ?: user.email.firstOrNull()?.toString() ?: "?"
+
             UserProfileHeader(
-                displayName = displayName,
-                email = email,
+                displayName = user.displayName,
+                email = user.email,
                 avatarInitial = avatarInitial
             )
 
-            // Menu items
             ProfileMenuSection(
                 onHistoryClick = onNavigateToHistory,
                 onTrashClick = onNavigateToTrash,
                 onSettingsClick = onNavigateToSettings
             )
 
-            // Logout button
             Button(
-                onClick = onLogout,
+                onClick = { viewModel.onEvent(ProfileEvent.Logout) },
                 modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.error
-                )
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
             ) {
                 Icon(Icons.Default.Logout, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(stringResource(R.string.logout))
             }
         } else {
-            // Guest view
             GuestPrompt(onLoginClick = onNavigateToLogin)
         }
     }
@@ -80,16 +89,12 @@ fun ProfileScreen(
 
 @Composable
 private fun UserProfileHeader(
-    displayName: String?,
-    email: String?,
-    avatarInitial: String?,
+    displayName: String,
+    email: String,
+    avatarInitial: String,
     modifier: Modifier = Modifier
 ) {
-    Row(
-        modifier = modifier,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        // Avatar placeholder
+    Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
         Box(
             modifier = Modifier
                 .size(80.dp)
@@ -98,21 +103,16 @@ private fun UserProfileHeader(
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = avatarInitial ?: "",
+                text = avatarInitial,
                 style = MaterialTheme.typography.headlineLarge,
                 color = MaterialTheme.colorScheme.onPrimaryContainer
             )
         }
-
         Spacer(modifier = Modifier.width(16.dp))
-
         Column {
+            Text(text = displayName, style = MaterialTheme.typography.headlineSmall)
             Text(
-                text = displayName.orEmpty(),
-                style = MaterialTheme.typography.headlineSmall
-            )
-            Text(
-                text = email.orEmpty(),
+                text = email,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -127,16 +127,12 @@ private fun ProfileMenuSection(
     onSettingsClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
             text = stringResource(R.string.profile_section_general),
             style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-
         ProfileMenuItem(
             icon = Icons.Default.History,
             title = stringResource(R.string.profile_menu_attempt_history),
@@ -165,27 +161,15 @@ private fun ProfileMenuItem(
     Card(
         onClick = onClick,
         modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        )
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary
-            )
+            Icon(imageVector = icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
             Spacer(modifier = Modifier.width(16.dp))
-            Text(
-                text = title,
-                modifier = Modifier.weight(1f),
-                style = MaterialTheme.typography.bodyLarge
-            )
+            Text(text = title, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
             Icon(
                 imageVector = Icons.Default.ChevronRight,
                 contentDescription = null,
@@ -202,14 +186,22 @@ private fun GuestPrompt(
 ) {
     Column(
         modifier = modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
-        Text(
-            text = stringResource(R.string.profile_guest_prompt),
-            style = MaterialTheme.typography.titleLarge
+        Icon(
+            imageVector = Icons.Default.AccountCircle,
+            contentDescription = null,
+            modifier = Modifier.size(80.dp),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = stringResource(R.string.profile_guest_prompt),
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(modifier = Modifier.height(24.dp))
         Button(onClick = onLoginClick) {
             Text(stringResource(R.string.login))
         }

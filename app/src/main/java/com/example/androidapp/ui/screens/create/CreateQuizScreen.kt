@@ -14,12 +14,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.androidapp.R
+import com.example.androidapp.di.LocalAppContainer
 import com.example.androidapp.ui.components.navigation.AppTopBar
 
 /**
  * Create Quiz screen with multi-step form.
- * Allows creating quiz metadata and adding questions.
+ * Stateless composable; all state is owned by [CreateQuizViewModel].
  *
  * @param onNavigateBack Callback to navigate back.
  * @param onSaveComplete Callback when quiz is saved successfully.
@@ -31,12 +36,31 @@ fun CreateQuizScreen(
     onSaveComplete: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var title by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
-    var questions by remember { mutableStateOf(listOf(QuestionDraft())) }
+    val container = LocalAppContainer
+    val viewModel: CreateQuizViewModel = viewModel(
+        factory = object : ViewModelProvider.Factory {
+            @Suppress("UNCHECKED_CAST")
+            override fun <T : ViewModel> create(modelClass: Class<T>): T =
+                CreateQuizViewModel(container.quizRepository, container.authRepository) as T
+        }
+    )
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(uiState.isSaved) {
+        if (uiState.isSaved) onSaveComplete()
+    }
+
+    val snackbarHostState = remember { SnackbarHostState() }
+    LaunchedEffect(uiState.error) {
+        uiState.error?.let { msg ->
+            snackbarHostState.showSnackbar(msg)
+            viewModel.onEvent(CreateQuizEvent.ClearError)
+        }
+    }
 
     Scaffold(
         modifier = modifier,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             AppTopBar(
                 title = stringResource(R.string.quiz_create),
@@ -44,10 +68,8 @@ fun CreateQuizScreen(
                 navigateUp = onNavigateBack,
                 actions = {
                     TextButton(
-                        onClick = {
-                            // TODO: Save quiz to repository
-                            onSaveComplete()
-                        }
+                        onClick = { viewModel.onEvent(CreateQuizEvent.SaveQuiz) },
+                        enabled = !uiState.isLoading
                     ) {
                         Text(
                             text = stringResource(R.string.save),
@@ -58,15 +80,8 @@ fun CreateQuizScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = {
-                    questions = questions + QuestionDraft()
-                }
-            ) {
-                Icon(
-                    Icons.Default.Add,
-                    contentDescription = stringResource(R.string.create_add_question_cd)
-                )
+            FloatingActionButton(onClick = { viewModel.onEvent(CreateQuizEvent.AddQuestion) }) {
+                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.create_add_question_cd))
             }
         }
     ) { innerPadding ->
@@ -77,23 +92,20 @@ fun CreateQuizScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Quiz Title Input
             item {
                 OutlinedTextField(
-                    value = title,
-                    onValueChange = { title = it },
+                    value = uiState.title,
+                    onValueChange = { viewModel.onEvent(CreateQuizEvent.TitleChanged(it)) },
                     label = { Text(stringResource(R.string.create_quiz_title_label)) },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
                     singleLine = true
                 )
             }
-
-            // Quiz Description Input
             item {
                 OutlinedTextField(
-                    value = description,
-                    onValueChange = { description = it },
+                    value = uiState.description,
+                    onValueChange = { viewModel.onEvent(CreateQuizEvent.DescriptionChanged(it)) },
                     label = { Text(stringResource(R.string.create_quiz_description_label)) },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -102,49 +114,45 @@ fun CreateQuizScreen(
                     maxLines = 5
                 )
             }
-
-            // Divider and Questions Header
+            item {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = stringResource(R.string.create_quiz_public),
+                        modifier = Modifier.weight(1f),
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                    Switch(
+                        checked = uiState.isPublic,
+                        onCheckedChange = { viewModel.onEvent(CreateQuizEvent.IsPublicChanged(it)) }
+                    )
+                }
+            }
             item {
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                 Text(
-                    text = stringResource(R.string.create_questions_header, questions.size),
+                    text = stringResource(R.string.create_questions_header, uiState.questions.size),
                     style = MaterialTheme.typography.titleMedium
                 )
             }
-
-            // Question Cards
-            itemsIndexed(questions) { index, question ->
-                QuestionCard(
+            itemsIndexed(uiState.questions) { index, question ->
+                QuestionEditorCard(
                     questionNumber = index + 1,
                     question = question,
                     onQuestionChange = { updated ->
-                        questions = questions.toMutableList().apply {
-                            this[index] = updated
-                        }
+                        viewModel.onEvent(CreateQuizEvent.UpdateQuestion(index, updated))
                     }
                 )
             }
-
-            // Bottom spacer for FAB
-            item {
-                Spacer(modifier = Modifier.height(80.dp))
-            }
+            item { Spacer(modifier = Modifier.height(80.dp)) }
         }
     }
 }
 
 /**
- * Draft data class for question creation.
- * TODO: Move to domain model when implementing ViewModel.
+ * Shared question editor card used in both [CreateQuizScreen] and [EditQuizScreen].
  */
-data class QuestionDraft(
-    val content: String = "",
-    val choices: List<String> = listOf("", "", "", ""),
-    val correctIndex: Int = 0
-)
-
 @Composable
-private fun QuestionCard(
+internal fun QuestionEditorCard(
     questionNumber: Int,
     question: QuestionDraft,
     onQuestionChange: (QuestionDraft) -> Unit,
@@ -152,9 +160,7 @@ private fun QuestionCard(
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        )
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -172,18 +178,45 @@ private fun QuestionCard(
                     )
                 }
             }
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = question.content.ifBlank {
-                    stringResource(R.string.create_question_tap_to_edit)
-                },
-                style = MaterialTheme.typography.bodyMedium,
-                maxLines = 1,
-                color = if (question.content.isBlank()) 
-                    MaterialTheme.colorScheme.onSurfaceVariant 
-                else 
-                    MaterialTheme.colorScheme.onSurface
+            Spacer(modifier = Modifier.height(8.dp))
+            OutlinedTextField(
+                value = question.content,
+                onValueChange = { onQuestionChange(question.copy(content = it)) },
+                label = { Text(stringResource(R.string.create_question_content_hint)) },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(8.dp)
             )
+            Spacer(modifier = Modifier.height(8.dp))
+            question.choices.forEachIndexed { cIdx, choice ->
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(vertical = 4.dp)
+                ) {
+                    RadioButton(
+                        selected = cIdx in question.correctIndices,
+                        onClick = {
+                            val newIndices = if (question.isMultiSelect) {
+                                if (cIdx in question.correctIndices) question.correctIndices - cIdx
+                                else question.correctIndices + cIdx
+                            } else setOf(cIdx)
+                            onQuestionChange(question.copy(correctIndices = newIndices))
+                        }
+                    )
+                    OutlinedTextField(
+                        value = choice.content,
+                        onValueChange = { newContent ->
+                            val updatedChoices = question.choices.toMutableList().apply {
+                                this[cIdx] = choice.copy(content = newContent)
+                            }
+                            onQuestionChange(question.copy(choices = updatedChoices))
+                        },
+                        placeholder = { Text(stringResource(R.string.create_choice_hint, cIdx + 1)) },
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(8.dp),
+                        singleLine = true
+                    )
+                }
+            }
         }
     }
 }

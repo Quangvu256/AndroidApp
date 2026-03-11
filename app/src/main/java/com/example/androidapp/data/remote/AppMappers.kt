@@ -6,8 +6,8 @@ import com.google.firebase.Timestamp
 import java.util.Date
 
 // --- USER ---
-fun UserDto.toDomain() = User(id, email, displayName, photoUrl)
-fun User.toDto() = UserDto(id, email, displayName, photoUrl)
+fun UserDto.toDomain() = User(id, email, displayName, username, photoUrl)
+fun User.toDto() = UserDto(id, email, displayName, username, photoUrl)
 
 // --- QUIZ & QUESTIONS ---
 fun ChoiceDto.toDomain() = Choice(id, content, isCorrect, position)
@@ -18,35 +18,57 @@ fun QuestionDto.toDomain() = Question(
     content = content,
     choices = choices.map { it.toDomain() },
     isMultiSelect = isMultiSelect,
-    explanation = explanation
+    explanation = explanation,
+    mediaUrl = mediaUrl,
+    points = points,
+    position = position
 )
+
 fun Question.toDto() = QuestionDto(
     id = id,
     content = content,
     choices = choices.map { it.toDto() },
     isMultiSelect = isMultiSelect,
-    explanation = explanation
+    explanation = explanation,
+    mediaUrl = mediaUrl,
+    points = points,
+    position = position
 )
 
 fun QuizDto.toDomain() = Quiz(
     id = id,
+    ownerId = ownerId,
     title = title,
+    description = description,
     authorName = authorName,
     thumbnailUrl = thumbnailUrl,
     tags = tags,
     questionCount = questionCount,
-    attemptCount = attemptCount
+    attemptCount = attemptCount,
+    isPublic = isPublic,
+    shareCode = shareCode,
+    createdAt = createdAt?.toDate()?.time ?: System.currentTimeMillis(),
+    updatedAt = updatedAt?.toDate()?.time ?: System.currentTimeMillis(),
+    deletedAt = deletedAt?.toDate()?.time
 )
 
 fun Quiz.toDto() = QuizDto(
     id = id,
+    ownerId = ownerId,
     title = title,
+    description = description,
     authorName = authorName,
     thumbnailUrl = thumbnailUrl,
     tags = tags,
     questionCount = questionCount,
-    attemptCount = attemptCount
+    attemptCount = attemptCount,
+    isPublic = isPublic,
+    shareCode = shareCode,
+    createdAt = Timestamp(Date(createdAt)),
+    updatedAt = Timestamp(Date(updatedAt)),
+    deletedAt = deletedAt?.let { Timestamp(Date(it)) }
 )
+
 // --- ATTEMPT ---
 fun AttemptDto.toDomain() = Attempt(
     id = id,
@@ -58,6 +80,7 @@ fun AttemptDto.toDomain() = Attempt(
     startTimeMillis = startTime?.toDate()?.time ?: System.currentTimeMillis(),
     endTimeMillis = endTime?.toDate()?.time
 )
+
 fun Attempt.toDto() = AttemptDto(
     id = id,
     userId = userId,
@@ -77,6 +100,7 @@ fun QuestionPoolItemDto.toDomain() = QuestionPoolItem(
     tags = tags,
     usageCount = usageCount
 )
+
 fun QuestionPoolItem.toDto() = QuestionPoolItemDto(
     id = id,
     question = question.toDto(),
@@ -91,6 +115,7 @@ fun ShareCodeDto.toDomain() = ShareCode(
     quizId = quizId,
     expiresAtMillis = expiresAt?.toDate()?.time
 )
+
 fun ShareCode.toDto() = ShareCodeDto(
     code = code,
     quizId = quizId,

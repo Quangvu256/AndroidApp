@@ -10,6 +10,15 @@ import com.example.androidapp.data.local.dao.QuestionDao
 import com.example.androidapp.data.local.dao.QuizDao
 import com.example.androidapp.data.local.dao.UserDao
 import com.example.androidapp.BuildConfig
+import com.example.androidapp.data.remote.firebase.AttemptRemoteDataSource
+import com.example.androidapp.data.remote.firebase.QuizRemoteDataSource
+import com.example.androidapp.data.remote.firebase.UserRemoteDataSource
+import com.example.androidapp.data.repository.AttemptRepositoryImpl
+import com.example.androidapp.data.repository.AuthRepositoryImpl
+import com.example.androidapp.data.repository.QuizRepositoryImpl
+import com.example.androidapp.domain.repository.AttemptRepository
+import com.example.androidapp.domain.repository.AuthRepository
+import com.example.androidapp.domain.repository.QuizRepository
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
@@ -120,5 +129,42 @@ class AppContainerImpl(override val context: Context) : AppContainer {
      */
     override val pendingSyncDao: PendingSyncDao by lazy {
         appDatabase.pendingSyncDao()
+    }
+
+    // ==================== Remote Data Sources ====================
+
+    private val quizRemoteDataSource: QuizRemoteDataSource by lazy {
+        QuizRemoteDataSource(firebaseFirestore)
+    }
+
+    private val attemptRemoteDataSource: AttemptRemoteDataSource by lazy {
+        AttemptRemoteDataSource(firebaseFirestore)
+    }
+
+    private val userRemoteDataSource: UserRemoteDataSource by lazy {
+        UserRemoteDataSource(firebaseFirestore)
+    }
+
+    // ==================== Repositories ====================
+
+    /**
+     * Provides the [AuthRepository] implementation.
+     */
+    override val authRepository: AuthRepository by lazy {
+        AuthRepositoryImpl(firebaseAuth, userDao, userRemoteDataSource)
+    }
+
+    /**
+     * Provides the [QuizRepository] implementation.
+     */
+    override val quizRepository: QuizRepository by lazy {
+        QuizRepositoryImpl(quizDao, questionDao, choiceDao, quizRemoteDataSource)
+    }
+
+    /**
+     * Provides the [AttemptRepository] implementation.
+     */
+    override val attemptRepository: AttemptRepository by lazy {
+        AttemptRepositoryImpl(attemptDao, attemptRemoteDataSource)
     }
 }

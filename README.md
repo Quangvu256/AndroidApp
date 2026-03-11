@@ -152,13 +152,14 @@ Or open in Android Studio and run.
 
 ## Documentation
 
-| Document | Description |
-|----------|-------------|
-| [Project Overview](Docs_en/01_project_overview.md) | High-level project description |
-| [Backend Design](Docs_en/02_backend_database_design.md) | Firebase & database structure |
-| [Frontend Design](Docs_en/03_frontend_design.md) | UI architecture & components |
-| [Application Behavior](Docs_en/04_application_behavior.md) | Business logic & flows |
-| [Code Rules](CODE_RULES.md) | Coding standards & conventions |
+| Document                                                   | Description                       |
+|------------------------------------------------------------|-----------------------------------|
+| [Project Overview](Docs_en/01_project_overview.md)         | High-level project description    |
+| [Backend Design](Docs_en/02_backend_database_design.md)    | Firebase & database structure     |
+| [Frontend Design](Docs_en/03_frontend_design.md)           | UI architecture & components      |
+| [Application Behavior](Docs_en/04_application_behavior.md) | Business logic & flows            |
+| [Code Rules](CODE_RULES.md)                                | Coding standards & conventions    |
+| [Centralize theming](Docs_en/ui-theme.md)                          | Design pattern for user interface |
 
 ## Development
 

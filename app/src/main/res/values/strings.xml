@@ -161,4 +161,12 @@
     <string name="quiz_result_try_again">Thử lại</string>
     <string name="quiz_result_review_answers">Xem lại đáp án</string>
     <string name="quiz_result_empty">Chưa có kết quả để hiển thị</string>
+
+    <!-- Edit Quiz -->
+    <string name="edit_quiz_title">Chỉnh sửa bài kiểm tra</string>
+
+    <!-- Create Quiz additional -->
+    <string name="create_quiz_public">Công khai</string>
+    <string name="create_question_content_hint">Nhập nội dung câu hỏi</string>
+    <string name="create_choice_hint">Lựa chọn %1$d</string>
 </resources>

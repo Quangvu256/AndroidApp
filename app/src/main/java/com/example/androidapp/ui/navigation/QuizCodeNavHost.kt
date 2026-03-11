@@ -17,6 +17,7 @@ import com.example.androidapp.ui.navigation.Routes.Args
 import com.example.androidapp.ui.screens.auth.LoginScreen
 import com.example.androidapp.ui.screens.auth.RegisterScreen
 import com.example.androidapp.ui.screens.create.CreateQuizScreen
+import com.example.androidapp.ui.screens.create.EditQuizScreen
 import com.example.androidapp.ui.screens.history.HistoryScreen
 import com.example.androidapp.ui.screens.home.HomeScreen
 import com.example.androidapp.ui.screens.profile.ProfileScreen
@@ -89,12 +90,7 @@ fun QuizCodeNavHost(
                     onNavigateToLogin = { navController.navigate(Routes.LOGIN) },
                     onNavigateToSettings = { navController.navigate(Routes.SETTINGS) },
                     onNavigateToHistory = { navController.navigate(Routes.HISTORY) },
-                    onNavigateToTrash = { navController.navigate(Routes.TRASH) },
-                    isLoggedIn = false,
-                    displayName = null,
-                    email = null,
-                    avatarInitial = null,
-                    onLogout = {}
+                    onNavigateToTrash = { navController.navigate(Routes.TRASH) }
                 )
             }
 
@@ -119,8 +115,10 @@ fun QuizCodeNavHost(
                 TakeQuizScreen(
                     quizId = quizId,
                     onNavigateBack = { navController.popBackStack() },
-                    onQuizComplete = { completedQuizId ->
-                        // TODO: Navigate to result once attemptId is available
+                    onQuizComplete = { attemptId ->
+                        navController.navigate(Routes.quizResult(quizId, attemptId)) {
+                            popUpTo(Routes.quizDetail(quizId)) { inclusive = false }
+                        }
                     }
                 )
             }
@@ -147,9 +145,7 @@ fun QuizCodeNavHost(
                             popUpTo(Routes.QUIZ_DETAIL) { inclusive = false }
                         }
                     },
-                    onReviewAnswers = {
-                        // TODO: Navigate to review screen
-                    }
+                    onReviewAnswers = { /* TODO: Navigate to review screen */ }
                 )
             }
 
@@ -165,8 +161,8 @@ fun QuizCodeNavHost(
                 arguments = listOf(navArgument(Args.QUIZ_ID) { type = NavType.StringType })
             ) { backStackEntry ->
                 val quizId = backStackEntry.arguments?.getString(Args.QUIZ_ID) ?: return@composable
-                // TODO: Create EditQuizScreen (reuses CreateQuizScreen with pre-populated data)
-                CreateQuizScreen(
+                EditQuizScreen(
+                    quizId = quizId,
                     onNavigateBack = { navController.popBackStack() },
                     onSaveComplete = { navController.popBackStack() }
                 )
@@ -180,9 +176,7 @@ fun QuizCodeNavHost(
             composable(Routes.HISTORY) {
                 HistoryScreen(
                     onNavigateBack = { navController.popBackStack() },
-                    onAttemptClick = { attemptId ->
-                        // TODO: Navigate to attempt detail/review
-                    }
+                    onAttemptClick = { /* TODO: Navigate to attempt detail/review */ }
                 )
             }
 

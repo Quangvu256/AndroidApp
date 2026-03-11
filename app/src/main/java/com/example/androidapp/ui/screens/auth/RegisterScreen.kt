@@ -18,10 +18,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.androidapp.R
+import com.example.androidapp.di.LocalAppContainer
 
 /**
  * Registration/Sign up screen.
+ * Stateless composable; all state is owned by [AuthViewModel].
  *
  * @param onRegisterSuccess Callback when registration is successful.
  * @param onNavigateToLogin Callback to navigate to login screen.
@@ -33,13 +39,38 @@ fun RegisterScreen(
     onNavigateToLogin: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val container = LocalAppContainer
+    val viewModel: AuthViewModel = viewModel(
+        factory = object : ViewModelProvider.Factory {
+            @Suppress("UNCHECKED_CAST")
+            override fun <T : ViewModel> create(modelClass: Class<T>): T =
+                AuthViewModel(container.authRepository) as T
+        }
+    )
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
     var username by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
 
-    Scaffold(modifier = modifier) { innerPadding ->
+    LaunchedEffect(uiState) {
+        if (uiState is AuthUiState.Authenticated) onRegisterSuccess()
+    }
+
+    val snackbarHostState = remember { SnackbarHostState() }
+    LaunchedEffect(uiState) {
+        if (uiState is AuthUiState.Error) {
+            snackbarHostState.showSnackbar((uiState as AuthUiState.Error).message)
+            viewModel.onEvent(AuthEvent.ClearError)
+        }
+    }
+
+    Scaffold(
+        modifier = modifier,
+        snackbarHost = { SnackbarHost(snackbarHostState) }
+    ) { innerPadding ->
         Column(
             modifier = Modifier
                 .padding(innerPadding)
@@ -143,22 +174,24 @@ fun RegisterScreen(
 
             // Register button
             Button(
-                onClick = {
-                    // TODO: Implement actual registration with Firebase
-                    onRegisterSuccess()
-                },
+                onClick = { viewModel.onEvent(AuthEvent.Register(email, password, username)) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
                 shape = RoundedCornerShape(12.dp),
                 enabled = username.isNotBlank() && email.isNotBlank() &&
                         android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() &&
-                        password.length >= 8 && password == confirmPassword
+                        password.length >= 6 && password == confirmPassword &&
+                        uiState !is AuthUiState.Loading
             ) {
-                Text(
-                    text = stringResource(R.string.register),
-                    style = MaterialTheme.typography.titleMedium
-                )
+                if (uiState is AuthUiState.Loading) {
+                    CircularProgressIndicator(modifier = Modifier.size(20.dp))
+                } else {
+                    Text(
+                        text = stringResource(R.string.register),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
