@@ -2,7 +2,6 @@ package com.example.androidapp.ui.screens.auth
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
@@ -24,6 +23,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.androidapp.R
 import com.example.androidapp.di.LocalAppContainer
+import com.example.androidapp.ui.components.navigation.AppTopBar
+import com.example.androidapp.ui.theme.FullShape
 
 /**
  * Registration/Sign up screen.
@@ -31,12 +32,14 @@ import com.example.androidapp.di.LocalAppContainer
  *
  * @param onRegisterSuccess Callback when registration is successful.
  * @param onNavigateToLogin Callback to navigate to login screen.
+ * @param onNavigateBack Callback to navigate back.
  * @param modifier Modifier for styling.
  */
 @Composable
 fun RegisterScreen(
     onRegisterSuccess: () -> Unit,
     onNavigateToLogin: () -> Unit,
+    onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val container = LocalAppContainer
@@ -69,6 +72,13 @@ fun RegisterScreen(
 
     Scaffold(
         modifier = modifier,
+        topBar = {
+            AppTopBar(
+                title = stringResource(R.string.register),
+                canNavigateBack = true,
+                navigateUp = onNavigateBack
+            )
+        },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { innerPadding ->
         Column(
@@ -104,7 +114,7 @@ fun RegisterScreen(
                     Icon(Icons.Default.Person, contentDescription = null)
                 },
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
+                shape = MaterialTheme.shapes.small,
                 singleLine = true
             )
 
@@ -119,7 +129,7 @@ fun RegisterScreen(
                     Icon(Icons.Default.Email, contentDescription = null)
                 },
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
+                shape = MaterialTheme.shapes.small,
                 singleLine = true
             )
 
@@ -149,7 +159,7 @@ fun RegisterScreen(
                 else
                     PasswordVisualTransformation(),
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
+                shape = MaterialTheme.shapes.small,
                 singleLine = true
             )
 
@@ -165,7 +175,7 @@ fun RegisterScreen(
                 },
                 visualTransformation = PasswordVisualTransformation(),
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
+                shape = MaterialTheme.shapes.small,
                 singleLine = true,
                 isError = confirmPassword.isNotEmpty() && password != confirmPassword
             )
@@ -178,7 +188,7 @@ fun RegisterScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
-                shape = RoundedCornerShape(12.dp),
+                shape = FullShape,
                 enabled = username.isNotBlank() && email.isNotBlank() &&
                         android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() &&
                         password.length >= 6 && password == confirmPassword &&
