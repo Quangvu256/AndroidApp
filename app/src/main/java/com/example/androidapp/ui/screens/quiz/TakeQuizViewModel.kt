@@ -29,7 +29,11 @@ sealed class TakeQuizUiState {
         val totalQuestions: Int,
         val selectedAnswers: Set<String>,
         val elapsedSeconds: Int,
-        val isSubmitting: Boolean
+        val isSubmitting: Boolean,
+        val isMultiSelect: Boolean,
+        val showExitDialog: Boolean = false,
+        val allAnswers: Map<String, Set<String>> = emptyMap(),
+        val shouldNavigateBack: Boolean = false
     ) : TakeQuizUiState()
     data class Finished(val attemptId: String) : TakeQuizUiState()
     data class Error(val message: String) : TakeQuizUiState()
@@ -40,7 +44,11 @@ sealed class TakeQuizEvent {
     data class AnswerSelected(val choiceId: String) : TakeQuizEvent()
     data object NextQuestion : TakeQuizEvent()
     data object PreviousQuestion : TakeQuizEvent()
+    data class GoToQuestion(val index: Int) : TakeQuizEvent()
     data object SubmitQuiz : TakeQuizEvent()
+    data object RequestExit : TakeQuizEvent()
+    data object ConfirmExit : TakeQuizEvent()
+    data object DismissExitDialog : TakeQuizEvent()
 }
 
 /**
@@ -80,7 +88,11 @@ class TakeQuizViewModel(
             is TakeQuizEvent.AnswerSelected -> onAnswerSelected(event.choiceId)
             is TakeQuizEvent.NextQuestion -> onNextQuestion()
             is TakeQuizEvent.PreviousQuestion -> onPreviousQuestion()
+            is TakeQuizEvent.GoToQuestion -> onGoToQuestion(event.index)
             is TakeQuizEvent.SubmitQuiz -> onSubmitQuiz()
+            is TakeQuizEvent.RequestExit -> onRequestExit()
+            is TakeQuizEvent.ConfirmExit -> onConfirmExit()
+            is TakeQuizEvent.DismissExitDialog -> onDismissExitDialog()
         }
     }
 
@@ -141,6 +153,39 @@ class TakeQuizViewModel(
         }
     }
 
+    private fun onGoToQuestion(index: Int) {
+        if (index in questions.indices) {
+            currentIndex = index
+            emitActiveState()
+        }
+    }
+
+    private fun onRequestExit() {
+        val current = _uiState.value
+        if (current is TakeQuizUiState.Active) {
+            _uiState.value = current.copy(showExitDialog = true)
+        }
+    }
+
+    private fun onConfirmExit() {
+        timerJob?.cancel()
+        val current = _uiState.value
+        if (current is TakeQuizUiState.Active) {
+            _uiState.value = current.copy(showExitDialog = false, shouldNavigateBack = true)
+        }
+    }
+
+    private fun onDismissExitDialog() {
+        val current = _uiState.value
+        if (current is TakeQuizUiState.Active) {
+            _uiState.value = current.copy(showExitDialog = false)
+        }
+    }
+
+    /** Whether exit has been confirmed (used by screen to trigger navigation). */
+    var exitConfirmed: Boolean = false
+        private set
+
     private fun onSubmitQuiz() {
         viewModelScope.launch {
             val active = _uiState.value as? TakeQuizUiState.Active ?: return@launch
@@ -159,7 +204,8 @@ class TakeQuizViewModel(
                 totalQuestions = questions.size,
                 answers = answerMap,
                 startTimeMillis = startTimeMillis,
-                endTimeMillis = System.currentTimeMillis()
+                endTimeMillis = System.currentTimeMillis(),
+                questionOrder = questions.map { it.id }
             )
 
             val result = attemptRepository.saveAttempt(attempt)
@@ -187,7 +233,10 @@ class TakeQuizViewModel(
             totalQuestions = questions.size,
             selectedAnswers = answers[question.id] ?: emptySet(),
             elapsedSeconds = elapsedSeconds,
-            isSubmitting = false
+            isSubmitting = false,
+            isMultiSelect = question.isMultiSelect,
+            allAnswers = answers.toMap(),
+            shouldNavigateBack = false
         )
     }
 

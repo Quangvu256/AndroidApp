@@ -68,8 +68,16 @@ fun TakeQuizScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(uiState) {
-        if (uiState is TakeQuizUiState.Finished) {
-            onQuizComplete((uiState as TakeQuizUiState.Finished).attemptId)
+        when (val state = uiState) {
+            is TakeQuizUiState.Finished -> {
+                onQuizComplete(state.attemptId)
+            }
+            is TakeQuizUiState.Active -> {
+                if (state.shouldNavigateBack) {
+                    onNavigateBack()
+                }
+            }
+            else -> {} // No action for Loading or Error
         }
     }
 
@@ -81,15 +89,54 @@ fun TakeQuizScreen(
                 onRetry = onNavigateBack,
                 modifier = Modifier.fillMaxSize()
             )
-            is TakeQuizUiState.Active -> ActiveQuizContent(
-                state = state,
-                onAnswerSelected = { viewModel.onEvent(TakeQuizEvent.AnswerSelected(it)) },
-                onNext = { viewModel.onEvent(TakeQuizEvent.NextQuestion) },
-                onPrevious = { viewModel.onEvent(TakeQuizEvent.PreviousQuestion) },
-                onSubmit = { viewModel.onEvent(TakeQuizEvent.SubmitQuiz) },
-                onClose = onNavigateBack,
-                modifier = Modifier.fillMaxSize()
-            )
+            is TakeQuizUiState.Active -> {
+                ActiveQuizContent(
+                    state = state,
+                    onAnswerSelected = { viewModel.onEvent(TakeQuizEvent.AnswerSelected(it)) },
+                    onNext = { viewModel.onEvent(TakeQuizEvent.NextQuestion) },
+                    onPrevious = { viewModel.onEvent(TakeQuizEvent.PreviousQuestion) },
+                    onSubmit = { viewModel.onEvent(TakeQuizEvent.SubmitQuiz) },
+                    onClose = { viewModel.onEvent(TakeQuizEvent.RequestExit) },
+                    modifier = Modifier.fillMaxSize()
+                )
+
+                // Exit confirmation dialog
+                if (state.showExitDialog) {
+                    AlertDialog(
+                        onDismissRequest = { viewModel.onEvent(TakeQuizEvent.DismissExitDialog) },
+                        title = {
+                            Text(
+                                text = stringResource(R.string.quiz_exit_title),
+                                fontFamily = InterFamily,
+                                fontWeight = FontWeight.Bold
+                            )
+                        },
+                        text = {
+                            Text(
+                                text = stringResource(R.string.quiz_exit_message),
+                                fontFamily = InterFamily
+                            )
+                        },
+                        confirmButton = {
+                            TextButton(
+                                onClick = { viewModel.onEvent(TakeQuizEvent.ConfirmExit) }
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.quiz_exit_confirm),
+                                    color = MaterialTheme.colorScheme.error
+                                )
+                            }
+                        },
+                        dismissButton = {
+                            TextButton(
+                                onClick = { viewModel.onEvent(TakeQuizEvent.DismissExitDialog) }
+                            ) {
+                                Text(text = stringResource(R.string.quiz_exit_cancel))
+                            }
+                        }
+                    )
+                }
+            }
             is TakeQuizUiState.Finished -> LoadingSpinner(modifier = Modifier.fillMaxSize())
         }
     }
