@@ -59,6 +59,12 @@ interface QuestionDao {
     suspend fun updateQuestion(question: QuestionEntity)
 
     /**
+     * Update the position of a question.
+     */
+    @Query("UPDATE questions SET position = :position WHERE id = :questionId")
+    suspend fun updatePosition(questionId: String, position: Int)
+
+    /**
      * Delete a question.
      */
     @Delete
