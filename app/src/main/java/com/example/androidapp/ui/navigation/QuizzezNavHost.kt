@@ -19,9 +19,12 @@ import com.example.androidapp.ui.screens.auth.LoginScreen
 import com.example.androidapp.ui.screens.auth.RegisterScreen
 import com.example.androidapp.ui.screens.attempt.AttemptDetailScreen
 import com.example.androidapp.ui.screens.create.CreateQuizScreen
+import com.example.androidapp.ui.screens.create.CsvImportScreen
 import com.example.androidapp.ui.screens.create.EditQuizScreen
+import com.example.androidapp.ui.screens.create.QuizPreviewScreen
 import com.example.androidapp.ui.screens.history.HistoryScreen
 import com.example.androidapp.ui.screens.home.HomeScreen
+import com.example.androidapp.ui.screens.profile.EditProfileScreen
 import com.example.androidapp.ui.screens.profile.ProfileScreen
 import com.example.androidapp.ui.screens.quiz.QuizDetailScreen
 import com.example.androidapp.ui.screens.quiz.QuizResultScreen
@@ -101,7 +104,14 @@ fun QuizzezNavHost(
                     onNavigateToLogin = { navController.navigate(Routes.LOGIN) },
                     onNavigateToSettings = { navController.navigate(Routes.SETTINGS) },
                     onNavigateToHistory = { navController.navigate(Routes.HISTORY) },
-                    onNavigateToTrash = { navController.navigate(Routes.TRASH) }
+                    onNavigateToTrash = { navController.navigate(Routes.TRASH) },
+                    onNavigateToEditProfile = { navController.navigate(Routes.PROFILE_EDIT) }
+                )
+            }
+
+            composable(Routes.PROFILE_EDIT) {
+                EditProfileScreen(
+                    onNavigateBack = { navController.popBackStack() }
                 )
             }
 
@@ -169,6 +179,18 @@ fun QuizzezNavHost(
                 )
             }
 
+            composable(Routes.CSV_IMPORT) {
+                CsvImportScreen(
+                    onNavigateBack = { navController.popBackStack() },
+                    onQuestionsImported = { _ ->
+                        // Questions are delivered via the callback.
+                        // Full cross-screen wiring requires a SharedViewModel;
+                        // navigate back so the caller can retrieve the result.
+                        navController.popBackStack()
+                    }
+                )
+            }
+
             composable(
                 route = Routes.QUIZ_EDIT,
                 arguments = listOf(navArgument(Args.QUIZ_ID) { type = NavType.StringType })
@@ -178,6 +200,24 @@ fun QuizzezNavHost(
                     quizId = quizId,
                     onNavigateBack = { navController.popBackStack() },
                     onSaveComplete = { navController.popBackStack() }
+                )
+            }
+
+            composable(
+                route = Routes.QUIZ_PREVIEW,
+                arguments = listOf(navArgument(Args.QUIZ_ID) { type = NavType.StringType })
+            ) { backStackEntry ->
+                val quizId = backStackEntry.arguments?.getString(Args.QUIZ_ID) ?: return@composable
+                QuizPreviewScreen(
+                    quizId = quizId,
+                    onNavigateBack = { navController.popBackStack() },
+                    onPublish = {
+                        // After publishing, navigate to the quiz detail screen so the user
+                        // can see the published quiz, clearing the preview from the back stack.
+                        navController.navigate(Routes.quizDetail(quizId)) {
+                            popUpTo(Routes.quizPreview(quizId)) { inclusive = true }
+                        }
+                    }
                 )
             }
 

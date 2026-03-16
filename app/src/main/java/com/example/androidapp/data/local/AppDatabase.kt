@@ -40,7 +40,7 @@ import com.example.androidapp.data.local.entity.UserEntity
         UserEntity::class,
         PendingSyncEntity::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -85,7 +85,8 @@ abstract class AppDatabase : RoomDatabase() {
          */
         val MIGRATION_1_2 = object : Migration(1, 2) {
             override fun migrate(db: SupportSQLiteDatabase) {
-                db.execSQL("""
+                db.execSQL(
+                    """
                     CREATE TABLE IF NOT EXISTS `pending_sync_operations` (
                         `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                         `entity_type` TEXT NOT NULL,
@@ -99,7 +100,21 @@ abstract class AppDatabase : RoomDatabase() {
                         `created_at` INTEGER NOT NULL,
                         `last_attempt_at` INTEGER
                     )
-                """.trimIndent())
+                """.trimIndent()
+                )
+            }
+        }
+
+        /**
+         * Migration from version 2 to 3.
+         * Adds the `photo_url` column to the `users` table so that avatar URLs
+         * can be persisted locally for offline profile display.
+         */
+        val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "ALTER TABLE `users` ADD COLUMN `photo_url` TEXT"
+                )
             }
         }
     }

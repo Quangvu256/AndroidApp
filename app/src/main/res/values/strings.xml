@@ -100,6 +100,15 @@
     <string name="profile_menu_recycle_bin">Thùng rác</string>
     <string name="profile_menu_settings">Cài đặt</string>
     <string name="profile_guest_prompt">Bạn chưa đăng nhập</string>
+    <string name="profile_edit_title">Chỉnh sửa hồ sơ</string>
+    <string name="profile_edit_display_name">Tên hiển thị</string>
+    <string name="profile_edit_email">Email</string>
+    <string name="profile_edit_change_avatar">Đổi ảnh đại diện</string>
+    <string name="profile_edit_saved">Đã lưu hồ sơ</string>
+    <string name="profile_stat_quizzes">%1$d Quizz</string>
+    <string name="profile_stat_attempts">%1$d lượt làm</string>
+    <string name="profile_stats_label">Thống kê</string>
+    <string name="profile_edit_button_cd">Chỉnh sửa hồ sơ</string>
 
     <!-- Trash -->
     <string name="trash_title">Thùng rác</string>
@@ -286,4 +295,53 @@
     <!-- Progress Persistence -->
     <string name="quiz_progress_saved">Đã lưu tiến trình</string>
     <string name="quiz_progress_resumed">Đã khôi phục tiến trình</string>
+
+    <!-- Create/Edit Quiz - Overhaul -->
+    <string name="create_quiz_tags_label">Từ khóa (phân cách bằng dấu phẩy)</string>
+    <string name="create_save_draft">Lưu nháp</string>
+    <string name="create_publish">Xuất bản</string>
+    <string name="create_quiz_published">Đã xuất bản thành công</string>
+    <string name="create_quiz_draft_saved">Đã lưu nháp</string>
+    <string name="create_question_media_url">URL hình ảnh/video (tùy chọn)</string>
+    <string name="create_question_points">Điểm</string>
+    <string name="create_question_explanation">Giải thích (tùy chọn)</string>
+    <string name="create_question_add_choice">Thêm lựa chọn</string>
+    <string name="create_question_remove_choice">Xóa lựa chọn</string>
+    <string name="create_question_move_up">Di chuyển lên</string>
+    <string name="create_question_move_down">Di chuyển xuống</string>
+    <string name="create_question_remove">Xóa câu hỏi</string>
+    <string name="create_question_points_label">Điểm: %1$d</string>
+    <string name="create_choice_correct_hint">Đánh dấu đúng</string>
+    <string name="create_last_saved">Lưu lúc %1$s</string>
+
+    <!-- Share to Pool -->
+    <string name="create_quiz_share_to_pool">Đóng góp câu hỏi vào cộng đồng</string>
+    <string name="create_quiz_share_to_pool_desc">Cho phép người dùng khác sử dụng câu hỏi của bạn</string>
+
+    <!-- Quiz Preview -->
+    <string name="quiz_preview_title">Xem trước Quizz</string>
+    <string name="quiz_preview_public_badge">Công khai</string>
+    <string name="quiz_preview_private_badge">Riêng tư</string>
+    <string name="quiz_preview_question_count">%1$d câu hỏi</string>
+    <string name="quiz_preview_publish_button">Xuất bản Quizz</string>
+    <string name="quiz_preview_already_published">Đã xuất bản</string>
+    <string name="quiz_preview_correct_label">Đúng</string>
+    <string name="quiz_preview_explanation_label">Giải thích:</string>
+
+    <!-- CSV Import -->
+    <string name="csv_import_title">Nhập từ CSV</string>
+    <string name="csv_import_pick_file">Chọn tệp CSV</string>
+    <string name="csv_import_instructions">Chọn tệp CSV với các cột: question, choice_a, choice_b, choice_c, choice_d, correct</string>
+    <string name="csv_import_preview_title">Xem trước dữ liệu</string>
+    <string name="csv_import_confirm">Xác nhận nhập</string>
+    <string name="csv_import_reset">Chọn lại tệp</string>
+    <string name="csv_import_errors_title">Lỗi dữ liệu</string>
+    <string name="csv_import_success">Đã nhập %1$d câu hỏi thành công</string>
+    <string name="csv_import_row_number">Hàng %1$d</string>
+    <string name="csv_import_column_question">Câu hỏi</string>
+    <string name="csv_import_column_choices">Lựa chọn</string>
+    <string name="csv_import_column_correct">Đúng</string>
+    <string name="csv_import_no_data">Không có dữ liệu hợp lệ</string>
+    <string name="csv_import_template_format">Định dạng mẫu: question, choice_a, choice_b, choice_c, choice_d, correct</string>
+    <string name="csv_import_file_selected">Tệp: %1$s</string>
 </resources>

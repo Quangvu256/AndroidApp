@@ -148,7 +148,7 @@ fun UserEntity.toDomain(): User = User(
     email = email,
     displayName = displayName ?: username,
     username = username,
-    photoUrl = null
+    photoUrl = photoUrl
 )
 
 /** Maps domain [User] to [UserEntity] for Room storage. */
@@ -156,6 +156,6 @@ fun User.toEntity(): UserEntity = UserEntity(
     id = id,
     username = username,
     email = email,
-    displayName = displayName
+    displayName = displayName,
+    photoUrl = photoUrl
 )
-

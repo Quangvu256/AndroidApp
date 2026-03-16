@@ -20,6 +20,9 @@ data class UserEntity(
     @ColumnInfo(name = "display_name")
     val displayName: String? = null,
 
+    @ColumnInfo(name = "photo_url")
+    val photoUrl: String? = null,
+
     @ColumnInfo(name = "created_at")
     val createdAt: Long = System.currentTimeMillis(),
 

@@ -16,11 +16,16 @@ object Routes {
     const val QUIZ_RESULT = "quiz/{quizId}/result/{attemptId}"
     const val QUIZ_CREATE = "quiz/create"
     const val QUIZ_EDIT = "quiz/{quizId}/edit"
+    const val QUIZ_PREVIEW = "quiz/{quizId}/preview"
 
     // User Routes
     const val SETTINGS = "settings"
     const val HISTORY = "history"
     const val TRASH = "trash"
+    const val PROFILE_EDIT = "profile/edit"
+
+    // CSV Import
+    const val CSV_IMPORT = "csv_import"
 
     // Review & Detail Routes
     const val ANSWER_REVIEW = "quiz/{quizId}/review/{attemptId}"
@@ -57,6 +62,11 @@ object Routes {
     fun quizEdit(quizId: String): String = "quiz/$quizId/edit"
 
     /**
+     * Build the quiz preview route with a specific quiz ID.
+     */
+    fun quizPreview(quizId: String): String = "quiz/$quizId/preview"
+
+    /**
      * Build the answer review route with quiz and attempt IDs.
      */
     fun answerReview(quizId: String, attemptId: String): String = "quiz/$quizId/review/$attemptId"
@@ -81,9 +91,11 @@ sealed class NavigationDestination(val route: String) {
     data object QuizCreate : NavigationDestination(Routes.QUIZ_CREATE)
     data class QuizDetail(val quizId: String) : NavigationDestination(Routes.quizDetail(quizId))
     data class QuizPlay(val quizId: String) : NavigationDestination(Routes.quizPlay(quizId))
-    data class QuizResult(val quizId: String, val attemptId: String) : 
+    data class QuizResult(val quizId: String, val attemptId: String) :
         NavigationDestination(Routes.quizResult(quizId, attemptId))
+
     data class QuizEdit(val quizId: String) : NavigationDestination(Routes.quizEdit(quizId))
+    data class QuizPreview(val quizId: String) : NavigationDestination(Routes.quizPreview(quizId))
 
     // User Destinations
     data object Settings : NavigationDestination(Routes.SETTINGS)
@@ -93,8 +105,15 @@ sealed class NavigationDestination(val route: String) {
     // Review & Detail Destinations
     data class AnswerReview(val quizId: String, val attemptId: String) :
         NavigationDestination(Routes.answerReview(quizId, attemptId))
+
     data class AttemptDetail(val attemptId: String) :
         NavigationDestination(Routes.attemptDetail(attemptId))
+
+    // CSV Import Destination
+    data object CsvImport : NavigationDestination(Routes.CSV_IMPORT)
+
+    // Profile Edit Destination
+    data object ProfileEdit : NavigationDestination(Routes.PROFILE_EDIT)
 
     // Auth Destinations
     data object Login : NavigationDestination(Routes.LOGIN)
