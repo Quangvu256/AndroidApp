@@ -136,7 +136,12 @@ interface PendingSyncDao {
     suspend fun deleteAllOperations()
     /**
      * Reset all failed operations back to PENDING status for retry.
+     * Also clears error_message and last_attempt_at to avoid surfacing stale diagnostics.
      */
-    @Query("UPDATE pending_sync_operations SET status = 'PENDING', retry_count = 0 WHERE status = 'FAILED'")
+    @Query("""
+        UPDATE pending_sync_operations 
+        SET status = 'PENDING', retry_count = 0, error_message = NULL, last_attempt_at = NULL 
+        WHERE status = 'FAILED'
+    """)
     suspend fun resetFailedToPending()
 }

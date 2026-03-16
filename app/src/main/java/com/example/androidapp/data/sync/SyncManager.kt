@@ -1,8 +1,13 @@
 package com.example.androidapp.data.sync
 
+import com.example.androidapp.data.local.dao.ChoiceDao
 import com.example.androidapp.data.local.dao.PendingSyncDao
+import com.example.androidapp.data.local.dao.QuestionDao
 import com.example.androidapp.data.local.dao.QuizDao
 import com.example.androidapp.data.local.entity.PendingSyncEntity
+import com.example.androidapp.data.local.entity.PendingSyncStatus
+import com.example.androidapp.data.local.entity.SyncEntityType
+import com.example.androidapp.data.local.entity.SyncOperation
 import com.example.androidapp.data.local.toDomain
 import com.example.androidapp.data.network.NetworkMonitor
 import com.example.androidapp.data.remote.firebase.QuizRemoteDataSource
@@ -25,6 +30,8 @@ enum class SyncState {
 class SyncManager(
     private val pendingSyncDao: PendingSyncDao,
     private val quizDao: QuizDao,
+    private val questionDao: QuestionDao,
+    private val choiceDao: ChoiceDao,
     private val quizRemoteDataSource: QuizRemoteDataSource,
     private val networkMonitor: NetworkMonitor
 ) {
@@ -55,9 +62,9 @@ class SyncManager(
         var hasErrors = false
         for (operation in pending) {
             try {
-                pendingSyncDao.updateStatus(operation.id, "IN_PROGRESS")
+                pendingSyncDao.updateStatus(operation.id, PendingSyncStatus.IN_PROGRESS.name)
                 executeOperation(operation)
-                pendingSyncDao.updateStatus(operation.id, "COMPLETED")
+                pendingSyncDao.updateStatus(operation.id, PendingSyncStatus.COMPLETED.name)
             } catch (e: Exception) {
                 hasErrors = true
                 pendingSyncDao.incrementRetryCount(
@@ -67,20 +74,23 @@ class SyncManager(
             }
         }
 
+        // Remove successfully completed operations so the table does not grow unbounded.
+        pendingSyncDao.deleteCompletedOperations()
+
         _syncState.value = if (hasErrors) SyncState.ERROR else SyncState.IDLE
     }
 
     suspend fun enqueueSync(
-        entityType: String,
+        entityType: SyncEntityType,
         entityId: String,
-        operation: String,
+        operation: SyncOperation,
         payload: String = ""
     ) {
         pendingSyncDao.insertOperation(
             PendingSyncEntity(
-                entityType = entityType,
+                entityType = entityType.name,
                 entityId = entityId,
-                operation = operation,
+                operation = operation.name,
                 payload = payload,
                 createdAt = System.currentTimeMillis()
             )
@@ -105,23 +115,37 @@ class SyncManager(
 
     private suspend fun executeOperation(operation: PendingSyncEntity) {
         when (operation.entityType) {
-            "QUIZ" -> executeQuizSync(operation)
+            SyncEntityType.QUIZ.name -> executeQuizSync(operation)
+            else -> throw IllegalArgumentException(
+                "Unsupported entityType '${operation.entityType}' for operation ${operation.id}"
+            )
         }
     }
 
     private suspend fun executeQuizSync(operation: PendingSyncEntity) {
         when (operation.operation) {
-            "CREATE", "UPDATE" -> {
-                val quizEntity = quizDao.getQuizById(operation.entityId) ?: return
+            SyncOperation.CREATE.name, SyncOperation.UPDATE.name -> {
+                val quizEntity = quizDao.getQuizById(operation.entityId)
+                    ?: throw IllegalStateException(
+                        "Quiz '${operation.entityId}' not found locally; cannot sync."
+                    )
                 val quiz = quizEntity.toDomain()
+
+                // Load questions (with choices) from Room to sync the full quiz graph.
+                val questionDtos = questionDao.getQuestionsByQuizIdOnce(operation.entityId)
+                    .map { qEntity ->
+                        val choices = choiceDao.getChoicesByQuestionIdOnce(qEntity.id)
+                        qEntity.toDomain(choices.map { it.toDomain() }).toDto()
+                    }
+
                 quizRemoteDataSource.saveQuiz(
                     operation.entityId,
                     quiz.toDto(),
-                    emptyList()
+                    questionDtos
                 )
                 quizDao.updateSyncStatus(operation.entityId, "SYNCED")
             }
-            "DELETE" -> {
+            SyncOperation.DELETE.name -> {
                 quizRemoteDataSource.permanentlyDeleteQuiz(operation.entityId)
             }
         }

@@ -19,9 +19,13 @@ class PoolRemoteDataSource(private val firestore: FirebaseFirestore) {
 
     suspend fun getPoolItemsByTags(tags: List<String>): List<QuestionPoolItemDto> {
         if (tags.isEmpty()) return emptyList()
-        val queryTags = tags.take(10)
+        // Firestore `whereArrayContainsAny` supports at most MAX_TAG_QUERY_LIMIT values.
+        // Callers must split larger tag sets into batches before invoking this method.
+        require(tags.size <= MAX_TAG_QUERY_LIMIT) {
+            "getPoolItemsByTags accepts at most $MAX_TAG_QUERY_LIMIT tags; received ${tags.size}."
+        }
         return firestore.collection(FirestoreCollections.QUESTION_POOL)
-            .whereArrayContainsAny("tags", queryTags)
+            .whereArrayContainsAny("tags", tags)
             .get()
             .await()
             .documents
@@ -49,5 +53,10 @@ class PoolRemoteDataSource(private val firestore: FirebaseFirestore) {
             .document(poolItemId)
             .update("usageCount", FieldValue.increment(1))
             .await()
+    }
+
+    companion object {
+        /** Maximum number of tags accepted by [getPoolItemsByTags] (Firestore whereArrayContainsAny limit). */
+        const val MAX_TAG_QUERY_LIMIT = 10
     }
 }

@@ -42,22 +42,20 @@ class QuestionRepositoryImpl(
     override suspend fun addQuestion(quizId: String, question: Question): Result<String> {
         return try {
             val questionId = question.id.ifBlank { UUID.randomUUID().toString() }
-            val finalQuestion = question.copy(id = questionId, quizId = quizId)
+            // Normalize choices once — assign stable IDs + positions here
+            val normalizedChoices = question.choices.mapIndexed { idx, choice ->
+                choice.copy(id = choice.id.ifBlank { UUID.randomUUID().toString() }, position = idx)
+            }
+            val finalQuestion = question.copy(id = questionId, quizId = quizId, choices = normalizedChoices)
 
             questionDao.insertQuestion(finalQuestion.toEntity())
-            finalQuestion.choices.forEachIndexed { idx, choice ->
-                val choiceId = choice.id.ifBlank { UUID.randomUUID().toString() }
-                choiceDao.insertChoice(
-                    choice.copy(id = choiceId, position = idx).toEntity(questionId)
-                )
+            normalizedChoices.forEach { choice ->
+                choiceDao.insertChoice(choice.toEntity(questionId))
             }
 
             ioScope.launch {
                 try {
-                    val choiceDtos = finalQuestion.choices.mapIndexed { idx, c ->
-                        val cId = c.id.ifBlank { UUID.randomUUID().toString() }
-                        c.copy(id = cId, position = idx).toDto()
-                    }
+                    val choiceDtos = normalizedChoices.map { it.toDto() }
                     remoteDataSource.saveQuestion(quizId, finalQuestion.toDto(), choiceDtos)
                 } catch (_: Exception) { }
             }
@@ -70,22 +68,22 @@ class QuestionRepositoryImpl(
 
     override suspend fun updateQuestion(question: Question): Result<Unit> {
         return try {
-            questionDao.insertQuestion(question.toEntity())
+            // Normalize choices once — assign stable IDs + positions here
+            val normalizedChoices = question.choices.mapIndexed { idx, choice ->
+                choice.copy(id = choice.id.ifBlank { UUID.randomUUID().toString() }, position = idx)
+            }
+            val normalizedQuestion = question.copy(choices = normalizedChoices)
+
+            questionDao.insertQuestion(normalizedQuestion.toEntity())
             choiceDao.deleteChoicesByQuestionId(question.id)
-            question.choices.forEachIndexed { idx, choice ->
-                val choiceId = choice.id.ifBlank { UUID.randomUUID().toString() }
-                choiceDao.insertChoice(
-                    choice.copy(id = choiceId, position = idx).toEntity(question.id)
-                )
+            normalizedChoices.forEach { choice ->
+                choiceDao.insertChoice(choice.toEntity(question.id))
             }
 
             ioScope.launch {
                 try {
-                    val choiceDtos = question.choices.mapIndexed { idx, c ->
-                        val cId = c.id.ifBlank { UUID.randomUUID().toString() }
-                        c.copy(id = cId, position = idx).toDto()
-                    }
-                    remoteDataSource.saveQuestion(question.quizId, question.toDto(), choiceDtos)
+                    val choiceDtos = normalizedChoices.map { it.toDto() }
+                    remoteDataSource.saveQuestion(normalizedQuestion.quizId, normalizedQuestion.toDto(), choiceDtos)
                 } catch (_: Exception) { }
             }
 
@@ -97,9 +95,9 @@ class QuestionRepositoryImpl(
 
     override suspend fun deleteQuestion(quizId: String, questionId: String): Result<Unit> {
         return try {
-            val entity = questionDao.getQuestionsByQuizIdOnce(quizId)
-                .find { it.id == questionId }
-            if (entity != null) {
+            // Fetch directly by ID rather than loading all questions for the quiz
+            val entity = questionDao.getQuestionById(questionId)
+            if (entity != null && entity.quizId == quizId) {
                 questionDao.deleteQuestion(entity)
             }
 
