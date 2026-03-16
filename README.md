@@ -189,7 +189,7 @@ Types: feat, fix, docs, style, refactor, test, chore
 # Run instrumented tests
 ./gradlew connectedAndroidTest
 ```
-# Run options
+### Run options
 
 ```bash
 Debug → emulator (default)

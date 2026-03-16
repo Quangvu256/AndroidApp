@@ -133,7 +133,7 @@
     <string name="home_see_all">Xem tất cả →</string>
     <string name="home_welcome_overline">CHÀO MỪNG TRỞ LẠI</string>
     <string name="home_welcome_display">Xin chào, %1$s</string>
-    <string name="home_welcome_progress"></string> 
+    <string name="home_welcome_progress"></string>
     <string name="home_join_session_label">THAM GIA</string>
     <string name="home_join_button">THAM GIA</string>
     <string name="home_code_placeholder">e.g. ABC123</string>
@@ -159,6 +159,14 @@
     <string name="auth_register_subtitle">Đăng ký để bắt đầu tạo Quizz</string>
     <string name="auth_confirm_password">Xác nhận mật khẩu</string>
     <string name="auth_have_account">Đã có tài khoản? </string>
+    <string name="auth_landing_title">Quizzez</string>
+    <string name="auth_landing_subtitle">Tạo, chia sẻ và thử thách bạn bè với các bài Quizz thú vị</string>
+    <string name="auth_continue_guest">Tiếp tục với tư cách khách</string>
+    <string name="auth_tab_login">Đăng nhập</string>
+    <string name="auth_tab_register">Đăng ký</string>
+    <string name="auth_or_divider">hoặc</string>
+    <string name="auth_password_toggle_cd">Hiện/ẩn mật khẩu</string>
+    <string name="auth_password_mismatch">Mật khẩu xác nhận không khớp</string>
 
     <!-- Quiz Detail -->
     <string name="quiz_detail_title">Chi tiết Quizz</string>
