@@ -119,27 +119,26 @@ class AuthFragment : Fragment() {
         binding.tvSwitchToLogin.setOnClickListener {
             tabLayout.getTabAt(0)?.select()
         }
+
+        // Explicitly apply the initial state for tab 0 (Login).
+        // TabLayout.OnTabSelectedListener.onTabSelected is only fired on *changes*,
+        // not on the initial selection, so both containers would otherwise remain in
+        // whatever visibility the XML inflater left them in until the user taps a tab.
+        showFormForTab(0)
     }
 
     /**
-     * Toggles visibility of login / register containers and rebinds
-     * the divider's top constraint to whichever container is visible.
+     * Toggles visibility of login / register containers.
+     *
+     * The divider's position is handled automatically by the Barrier in the XML
+     * layout, which tracks the bottom edge of whichever container is visible.
+     * A GONE view contributes zero size to the Barrier, so no runtime constraint
+     * patching is needed here.
      */
     private fun showFormForTab(position: Int) {
         val showLogin = position == 0
         binding.loginContainer.visibility = if (showLogin) View.VISIBLE else View.GONE
         binding.registerContainer.visibility = if (showLogin) View.GONE else View.VISIBLE
-
-        // Move the divider below the currently visible form.
-        val dividerParams =
-            binding.dividerContainer.layoutParams as
-                    androidx.constraintlayout.widget.ConstraintLayout.LayoutParams
-        dividerParams.topToBottom = if (showLogin) {
-            binding.loginContainer.id
-        } else {
-            binding.registerContainer.id
-        }
-        binding.dividerContainer.layoutParams = dividerParams
     }
 
     // ---- Login form ---------------------------------------------------------
