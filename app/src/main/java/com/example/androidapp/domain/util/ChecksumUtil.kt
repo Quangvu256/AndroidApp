@@ -25,6 +25,6 @@ object ChecksumUtil {
 
         val digest = MessageDigest.getInstance("SHA-256")
         return digest.digest(data.toByteArray())
-            .fold("") { str, byte -> str + "%02x".format(byte) }
+            .joinToString("") { byte -> "%02x".format(byte.toInt() and 0xff) }
     }
 }
