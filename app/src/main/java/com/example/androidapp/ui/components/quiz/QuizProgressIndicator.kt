@@ -11,6 +11,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.androidapp.R
 
+/**
+ * Displays quiz progress as a labeled linear progress bar.
+ *
+ * @param currentQuestionIndex Zero-based index of the current question.
+ * @param totalQuestions Total number of questions in the quiz.
+ * @param modifier Modifier for styling and layout customization.
+ */
 @Composable
 fun QuizProgressIndicator(
     currentQuestionIndex: Int,

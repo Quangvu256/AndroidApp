@@ -13,6 +13,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.androidapp.R
 
+/**
+ * Displays a full-screen error state with an icon, message, and retry button.
+ *
+ * @param message The error message to display; falls back to a default if null.
+ * @param icon The icon shown above the message.
+ * @param onRetry Callback invoked when the user taps the retry button.
+ * @param modifier Modifier for styling and layout customization.
+ */
 @Composable
 fun ErrorState(
     message: String? = null,

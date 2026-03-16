@@ -11,6 +11,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import com.example.androidapp.R
 
+/**
+ * Center-aligned top app bar with optional back navigation and action icons.
+ *
+ * @param title Text displayed in the center of the bar.
+ * @param canNavigateBack Whether to show the back navigation arrow.
+ * @param navigateUp Callback invoked when the back arrow is tapped.
+ * @param modifier Modifier for styling and layout customization.
+ * @param actions Composable row content for trailing action icons.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppTopBar(

@@ -11,6 +11,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
+/**
+ * A selectable answer choice card for quiz questions, displaying a label, content text,
+ * and a radio button or checkbox depending on the selection mode.
+ *
+ * @param label The choice label (e.g., "A", "B").
+ * @param content The choice text content.
+ * @param isSelected Whether this choice is currently selected.
+ * @param isMultiSelect If true, displays a checkbox; otherwise a radio button.
+ * @param onClick Callback when the choice is clicked.
+ * @param modifier Modifier for styling and layout customization.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChoiceButton(

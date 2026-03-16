@@ -7,6 +7,7 @@ import com.example.androidapp.domain.model.Question
 import com.example.androidapp.domain.model.Quiz
 import com.example.androidapp.domain.repository.AuthRepository
 import com.example.androidapp.domain.repository.QuizRepository
+import com.example.androidapp.domain.util.QuizValidator
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -73,16 +74,19 @@ class EditQuizViewModel(
             is EditQuizEvent.AddQuestion -> _uiState.update {
                 it.copy(questions = it.questions + QuestionDraft())
             }
+
             is EditQuizEvent.UpdateQuestion -> _uiState.update { state ->
                 state.copy(questions = state.questions.toMutableList().apply {
                     this[event.index] = event.draft
                 })
             }
+
             is EditQuizEvent.RemoveQuestion -> _uiState.update { state ->
                 if (state.questions.size > 1) {
                     state.copy(questions = state.questions.toMutableList().apply { removeAt(event.index) })
                 } else state
             }
+
             is EditQuizEvent.SaveQuiz -> onSaveQuiz()
             is EditQuizEvent.ClearError -> _uiState.update { it.copy(error = null) }
         }
@@ -101,7 +105,8 @@ class EditQuizViewModel(
                     id = question.id,
                     content = question.content,
                     choices = question.choices.map { c -> ChoiceDraft(id = c.id, content = c.content) },
-                    correctIndices = question.choices.mapIndexedNotNull { idx, c -> if (c.isCorrect) idx else null }.toSet(),
+                    correctIndices = question.choices.mapIndexedNotNull { idx, c -> if (c.isCorrect) idx else null }
+                        .toSet(),
                     isMultiSelect = question.isMultiSelect,
                     explanation = question.explanation ?: ""
                 )
@@ -125,6 +130,17 @@ class EditQuizViewModel(
             val state = _uiState.value
             if (state.title.isBlank()) {
                 _uiState.update { it.copy(error = "Vui lòng nhập tiêu đề bài kiểm tra") }
+                return@launch
+            }
+            val validationResult = QuizValidator.validate(
+                questions = state.questions,
+                getChoices = { draft ->
+                    draft.choices.mapIndexed { idx, choice -> Pair(choice, idx in draft.correctIndices) }
+                },
+                isCorrect = { (_, correct) -> correct }
+            )
+            if (!validationResult.isValid) {
+                _uiState.update { it.copy(error = validationResult.errorMessage) }
                 return@launch
             }
             _uiState.update { it.copy(isLoading = true) }
@@ -168,4 +184,3 @@ class EditQuizViewModel(
         }
     }
 }
-

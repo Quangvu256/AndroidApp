@@ -23,6 +23,12 @@ import com.example.androidapp.R
 import com.example.androidapp.ui.theme.FullShape
 import java.util.Locale
 
+/**
+ * Displays elapsed time in MM:SS format inside a pill-shaped container.
+ *
+ * @param secondsElapsed Total seconds elapsed to format and display.
+ * @param modifier Modifier for styling and layout customization.
+ */
 @Composable
 fun TimerDisplay(
     secondsElapsed: Long,

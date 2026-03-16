@@ -12,7 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
+
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -63,6 +63,7 @@ fun MediaDisplay(
                     contentDescription = contentDescription
                 )
             }
+
             MediaType.VIDEO -> {
                 VideoThumbnail(
                     contentDescription = contentDescription,
@@ -133,7 +134,7 @@ private fun VideoThumbnail(
         modifier = modifier
             .fillMaxWidth()
             .height(200.dp)
-            .background(Color.Black.copy(alpha = 0.9f)),
+            .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.9f)),
         contentAlignment = Alignment.Center
     ) {
         // Video icon background
@@ -141,7 +142,7 @@ private fun VideoThumbnail(
             imageVector = Icons.Default.Image,
             contentDescription = null,
             modifier = Modifier.size(64.dp),
-            tint = Color.White.copy(alpha = 0.3f)
+            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
         )
 
         // Play button
@@ -151,7 +152,7 @@ private fun VideoThumbnail(
                 modifier = Modifier.size(64.dp),
                 colors = IconButtonDefaults.filledIconButtonColors(
                     containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.9f),
-                    contentColor = Color.White
+                    contentColor = MaterialTheme.colorScheme.onPrimary
                 )
             ) {
                 Icon(
@@ -168,12 +169,12 @@ private fun VideoThumbnail(
                 .align(Alignment.BottomStart)
                 .padding(8.dp),
             shape = MaterialTheme.shapes.extraSmall,
-            color = Color.Black.copy(alpha = 0.7f)
+            color = MaterialTheme.colorScheme.scrim.copy(alpha = 0.7f)
         ) {
             Text(
                 text = stringResource(R.string.video_label),
                 style = MaterialTheme.typography.labelSmall,
-                color = Color.White,
+                color = MaterialTheme.colorScheme.onPrimary,
                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
             )
         }
@@ -240,11 +241,12 @@ private fun detectMediaType(url: String): MediaType {
     val lowerUrl = url.lowercase()
     return when {
         lowerUrl.endsWith(".mp4") ||
-        lowerUrl.endsWith(".webm") ||
-        lowerUrl.endsWith(".avi") ||
-        lowerUrl.contains("youtube.com") ||
-        lowerUrl.contains("youtu.be") ||
-        lowerUrl.contains("vimeo.com") -> MediaType.VIDEO
+                lowerUrl.endsWith(".webm") ||
+                lowerUrl.endsWith(".avi") ||
+                lowerUrl.contains("youtube.com") ||
+                lowerUrl.contains("youtu.be") ||
+                lowerUrl.contains("vimeo.com") -> MediaType.VIDEO
+
         else -> MediaType.IMAGE
     }
 }

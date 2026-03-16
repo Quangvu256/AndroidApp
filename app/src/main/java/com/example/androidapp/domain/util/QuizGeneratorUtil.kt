@@ -7,7 +7,7 @@ object QuizGeneratorUtil {
 
     /**
      * Selects a random subset of questions from a pool based on specified tags.
-     * * @param Q The type representing a Question model.
+     * @param Q The type representing a Question model.
      * @param questionPool The full list of available questions to draw from.
      * @param targetTags A set of tags to filter the question pool. If empty, questions are drawn from the entire pool.
      * @param desiredCount The number of questions to include in the generated draft.

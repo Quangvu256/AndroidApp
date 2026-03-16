@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.example.androidapp.domain.model.Quiz
 import com.example.androidapp.ui.components.quiz.QuizCard
 
 /**
@@ -30,10 +31,20 @@ fun SearchResultsList(
     ) {
         items(results, key = { it.id }) { quiz ->
             QuizCard(
-                quiz = quiz,
+                quiz = quiz.toQuiz(),
                 onClick = { onQuizClick(quiz.id) },
                 modifier = Modifier
             )
         }
     }
 }
+
+private fun QuizCardDraft.toQuiz() = Quiz(
+    id = id,
+    ownerId = "",
+    title = title,
+    authorName = authorName,
+    thumbnailUrl = coverImageUrl,
+    questionCount = questionCount,
+    attemptCount = attemptCount
+)

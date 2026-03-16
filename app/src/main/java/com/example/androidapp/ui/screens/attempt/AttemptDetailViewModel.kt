@@ -7,6 +7,7 @@ import com.example.androidapp.domain.model.Quiz
 import com.example.androidapp.domain.repository.AttemptRepository
 import com.example.androidapp.domain.repository.QuizRepository
 import com.example.androidapp.domain.util.ScoreUtil
+import com.example.androidapp.domain.util.TimeFormatter
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -22,8 +23,10 @@ sealed class AttemptDetailUiState {
         val quiz: Quiz,
         val percentage: Int,
         val starRating: Int,
-        val timeTakenMs: Long
+        val timeTakenMs: Long,
+        val timeTakenFormatted: String
     ) : AttemptDetailUiState()
+
     data class Error(val message: String) : AttemptDetailUiState()
 }
 
@@ -73,13 +76,15 @@ class AttemptDetailViewModel(
             } else {
                 0L
             }
+            val timeTakenFormatted = TimeFormatter.formatDuration(timeTakenMs / 1000L)
 
             _uiState.value = AttemptDetailUiState.Success(
                 attempt = attempt,
                 quiz = quiz,
                 percentage = percentage,
                 starRating = starRating,
-                timeTakenMs = timeTakenMs
+                timeTakenMs = timeTakenMs,
+                timeTakenFormatted = timeTakenFormatted
             )
         }
     }

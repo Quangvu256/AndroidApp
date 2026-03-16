@@ -19,6 +19,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.androidapp.R
 import com.example.androidapp.di.LocalAppContainer
+import com.example.androidapp.ui.components.forms.TextInputField
 import com.example.androidapp.ui.components.navigation.AppTopBar
 
 /**
@@ -102,23 +103,21 @@ fun EditQuizScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 item {
-                    OutlinedTextField(
+                    TextInputField(
                         value = uiState.title,
                         onValueChange = { viewModel.onEvent(EditQuizEvent.TitleChanged(it)) },
-                    label = { Text(stringResource(R.string.create_quiz_title_label)) },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = MaterialTheme.shapes.small,
+                        label = stringResource(R.string.create_quiz_title_label),
+                        modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
                 }
                 item {
-                    OutlinedTextField(
+                    TextInputField(
                         value = uiState.description,
                         onValueChange = { viewModel.onEvent(EditQuizEvent.DescriptionChanged(it)) },
-                        label = { Text(stringResource(R.string.create_quiz_description_label)) },
-                    modifier = Modifier.fillMaxWidth().height(120.dp),
-                    shape = MaterialTheme.shapes.small,
-                        maxLines = 5
+                        label = stringResource(R.string.create_quiz_description_label),
+                        modifier = Modifier.fillMaxWidth().height(120.dp),
+                        singleLine = false
                     )
                 }
                 item {
@@ -155,4 +154,3 @@ fun EditQuizScreen(
         }
     }
 }
-

@@ -8,7 +8,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.outlined.Help
+import com.example.androidapp.ui.components.quiz.TimerDisplay
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -72,11 +72,13 @@ fun TakeQuizScreen(
             is TakeQuizUiState.Finished -> {
                 onQuizComplete(state.attemptId)
             }
+
             is TakeQuizUiState.Active -> {
                 if (state.shouldNavigateBack) {
                     onNavigateBack()
                 }
             }
+
             else -> {} // No action for Loading or Error
         }
     }
@@ -89,6 +91,7 @@ fun TakeQuizScreen(
                 onRetry = onNavigateBack,
                 modifier = Modifier.fillMaxSize()
             )
+
             is TakeQuizUiState.Active -> {
                 ActiveQuizContent(
                     state = state,
@@ -137,6 +140,7 @@ fun TakeQuizScreen(
                     )
                 }
             }
+
             is TakeQuizUiState.Finished -> LoadingSpinner(modifier = Modifier.fillMaxSize())
         }
     }
@@ -152,13 +156,12 @@ private fun ActiveQuizContent(
     onClose: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val progress = (state.currentIndex + 1).toFloat() / state.totalQuestions.coerceAtLeast(1)
     val isLast = state.currentIndex == state.totalQuestions - 1
 
     Column(modifier = modifier.background(MaterialTheme.colorScheme.background)) {
         // ── Thin top progress bar ──────────────────────────────────────────
         LinearProgressIndicator(
-            progress = { progress },
+            progress = { (state.currentIndex + 1).toFloat() / state.totalQuestions.coerceAtLeast(1) },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(3.dp),
@@ -170,7 +173,8 @@ private fun ActiveQuizContent(
         QuizAppBar(
             currentIndex = state.currentIndex,
             totalQuestions = state.totalQuestions,
-            onClose = onClose
+            onClose = onClose,
+            secondsElapsed = state.elapsedSeconds.toLong()
         )
 
         HorizontalDivider(
@@ -246,6 +250,7 @@ private fun QuizAppBar(
     currentIndex: Int,
     totalQuestions: Int,
     onClose: () -> Unit,
+    secondsElapsed: Long,
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -277,17 +282,11 @@ private fun QuizAppBar(
             modifier = Modifier.align(Alignment.Center)
         )
 
-        // Help icon (right)
-        IconButton(
-            onClick = { /* TODO: open quiz help */ },
+        // Timer display (right)
+        TimerDisplay(
+            secondsElapsed = secondsElapsed,
             modifier = Modifier.align(Alignment.CenterEnd)
-        ) {
-            Icon(
-                imageVector = Icons.Outlined.Help,
-                contentDescription = stringResource(R.string.take_quiz_help_cd),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
+        )
     }
 }
 
@@ -419,4 +418,3 @@ private fun QuizFooter(
         }
     }
 }
-

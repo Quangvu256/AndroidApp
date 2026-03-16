@@ -10,6 +10,7 @@ import com.example.androidapp.data.remote.toDomain
 import com.example.androidapp.data.remote.toDto
 import com.example.androidapp.domain.model.Question
 import com.example.androidapp.domain.model.Quiz
+import com.example.androidapp.domain.util.ChecksumUtil
 import com.example.androidapp.domain.repository.HomeQuizzes
 import com.example.androidapp.domain.repository.QuizRepository
 import com.google.firebase.Timestamp
@@ -118,8 +119,11 @@ class QuizRepositoryImpl(
             val quizId = quiz.id.ifBlank { UUID.randomUUID().toString() }
             val finalQuiz = quiz.copy(id = quizId, questionCount = questions.size)
 
+            // Compute content checksum before persisting so change detection works offline.
+            val checksum = ChecksumUtil.computeQuizChecksum(finalQuiz, questions)
+
             // Write to Room first with PENDING status
-            quizDao.insertQuiz(finalQuiz.toEntity(syncStatus = "PENDING"))
+            quizDao.insertQuiz(finalQuiz.toEntity(syncStatus = "PENDING").copy(checksum = checksum))
             questions.forEachIndexed { idx, question ->
                 val qId = question.id.ifBlank { UUID.randomUUID().toString() }
                 val finalQuestion = question.copy(id = qId, quizId = quizId, position = idx)
@@ -161,7 +165,8 @@ class QuizRepositoryImpl(
             ioScope.launch {
                 try {
                     remoteDataSource.softDeleteQuiz(quizId, Timestamp(Date(deletedAt)))
-                } catch (_: Exception) { }
+                } catch (_: Exception) {
+                }
             }
             Result.success(Unit)
         } catch (e: Exception) {
@@ -175,7 +180,8 @@ class QuizRepositoryImpl(
             ioScope.launch {
                 try {
                     remoteDataSource.restoreQuiz(quizId)
-                } catch (_: Exception) { }
+                } catch (_: Exception) {
+                }
             }
             Result.success(Unit)
         } catch (e: Exception) {
@@ -190,7 +196,8 @@ class QuizRepositoryImpl(
             ioScope.launch {
                 try {
                     remoteDataSource.permanentlyDeleteQuiz(quizId)
-                } catch (_: Exception) { }
+                } catch (_: Exception) {
+                }
             }
             Result.success(Unit)
         } catch (e: Exception) {
@@ -204,7 +211,8 @@ class QuizRepositoryImpl(
             ioScope.launch {
                 try {
                     remoteDataSource.incrementAttemptCount(quizId)
-                } catch (_: Exception) { }
+                } catch (_: Exception) {
+                }
             }
             Result.success(Unit)
         } catch (e: Exception) {
@@ -233,7 +241,8 @@ class QuizRepositoryImpl(
             dtos.forEach { dto ->
                 quizDao.insertQuiz(dto.toDomain().toEntity())
             }
-        } catch (_: Exception) { }
+        } catch (_: Exception) {
+        }
     }
 
     private suspend fun refreshPublicQuizzes() {
@@ -242,9 +251,7 @@ class QuizRepositoryImpl(
             dtos.forEach { dto ->
                 quizDao.insertQuiz(dto.toDomain().toEntity())
             }
-        } catch (_: Exception) { }
+        } catch (_: Exception) {
+        }
     }
 }
-
-
-

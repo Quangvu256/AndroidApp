@@ -13,6 +13,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.androidapp.ui.components.navigation.BottomNavBar
+import com.example.androidapp.ui.components.navigation.CreateQuizFAB
 import com.example.androidapp.ui.navigation.Routes.Args
 import com.example.androidapp.ui.screens.auth.LoginScreen
 import com.example.androidapp.ui.screens.auth.RegisterScreen
@@ -58,6 +59,14 @@ fun QuizzezNavHost(
                             restoreState = true
                         }
                     }
+                )
+            }
+        },
+        floatingActionButton = {
+            // Show create quiz FAB only on the Home screen
+            if (currentRoute == Routes.HOME) {
+                CreateQuizFAB(
+                    onClick = { navController.navigate(Routes.QUIZ_CREATE) }
                 )
             }
         }

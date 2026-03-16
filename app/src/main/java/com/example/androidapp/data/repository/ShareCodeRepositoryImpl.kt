@@ -2,6 +2,7 @@ package com.example.androidapp.data.repository
 
 import com.example.androidapp.data.remote.firebase.ShareCodeRemoteDataSource
 import com.example.androidapp.domain.repository.ShareCodeRepository
+import com.example.androidapp.domain.util.ShareCodeUtil
 
 class ShareCodeRepositoryImpl(
     private val remoteDataSource: ShareCodeRemoteDataSource
@@ -22,7 +23,7 @@ class ShareCodeRepositoryImpl(
             var attempts = 0
             val maxAttempts = 10
             do {
-                code = generateRandomCode()
+                code = ShareCodeUtil.generateCode()
                 val exists = remoteDataSource.shareCodeExists(code)
                 attempts++
                 if (!exists) break
@@ -66,12 +67,5 @@ class ShareCodeRepositoryImpl(
         }
     }
 
-    private fun generateRandomCode(): String {
-        val chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-        return (1..SHARE_CODE_LENGTH).map { chars.random() }.joinToString("")
-    }
 
-    companion object {
-        private const val SHARE_CODE_LENGTH = 6
-    }
 }

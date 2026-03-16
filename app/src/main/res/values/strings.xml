@@ -200,6 +200,18 @@
     <!-- Search -->
     <string name="search_category_label">DANH MỤC</string>
     <string name="search_results_header">Kết quả tìm kiếm</string>
+    <string name="search_icon_cd">Tìm kiếm</string>
+    <string name="search_clear_cd">Xóa nội dung tìm kiếm</string>
+    <string name="search_recent_title">Tìm kiếm gần đây</string>
+    <string name="search_clear_all">Xóa tất cả</string>
+    <string name="search_tags_label">Từ khóa</string>
+    <string name="sort_tooltip">Sắp xếp</string>
+    <string name="sort_date">Ngày tạo</string>
+    <string name="sort_popularity">Phổ biến nhất</string>
+    <string name="sort_relevance">Liên quan nhất</string>
+    <string name="toggle_view_cd">Chuyển đổi chế độ xem</string>
+    <string name="search_no_results_title">Không tìm thấy kết quả</string>
+    <string name="search_no_results_message">Hãy thử tìm kiếm với từ khóa khác</string>
 
     <!-- Profile -->
     <string name="profile_section_label">CÀI ĐẶT</string>

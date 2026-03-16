@@ -15,6 +15,7 @@ import com.example.androidapp.domain.repository.AuthRepository
 import com.example.androidapp.domain.repository.PoolRepository
 import com.example.androidapp.domain.repository.QuestionRepository
 import com.example.androidapp.domain.repository.QuizRepository
+import com.example.androidapp.domain.repository.SearchRepository
 import com.example.androidapp.domain.repository.ShareCodeRepository
 import com.example.androidapp.domain.repository.StorageRepository
 import com.google.firebase.auth.FirebaseAuth
@@ -49,5 +50,5 @@ interface AppContainer {
     val shareCodeRepository: ShareCodeRepository
     val poolRepository: PoolRepository
     val storageRepository: StorageRepository
+    val searchRepository: SearchRepository
 }
-

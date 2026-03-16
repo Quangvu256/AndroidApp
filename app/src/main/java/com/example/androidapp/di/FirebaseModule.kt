@@ -23,6 +23,7 @@ import com.example.androidapp.data.repository.PoolRepositoryImpl
 import com.example.androidapp.data.repository.QuestionRepositoryImpl
 import com.example.androidapp.data.repository.QuizRepositoryImpl
 import com.example.androidapp.data.repository.ShareCodeRepositoryImpl
+import com.example.androidapp.data.repository.SearchRepositoryImpl
 import com.example.androidapp.data.repository.StorageRepositoryImpl
 import com.example.androidapp.data.sync.SyncManager
 import com.example.androidapp.domain.repository.AttemptRepository
@@ -31,6 +32,7 @@ import com.example.androidapp.domain.repository.PoolRepository
 import com.example.androidapp.domain.repository.QuestionRepository
 import com.example.androidapp.domain.repository.QuizRepository
 import com.example.androidapp.domain.repository.ShareCodeRepository
+import com.example.androidapp.domain.repository.SearchRepository
 import com.example.androidapp.domain.repository.StorageRepository
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
@@ -143,5 +145,8 @@ class AppContainerImpl(override val context: Context) : AppContainer {
     override val storageRepository: StorageRepository by lazy {
         StorageRepositoryImpl(firebaseStorage)
     }
-}
 
+    override val searchRepository: SearchRepository by lazy {
+        SearchRepositoryImpl(context)
+    }
+}

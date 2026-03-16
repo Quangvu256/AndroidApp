@@ -7,7 +7,8 @@ import com.example.androidapp.domain.model.Question
 import com.example.androidapp.domain.repository.AttemptRepository
 import com.example.androidapp.domain.repository.AuthRepository
 import com.example.androidapp.domain.repository.QuizRepository
-import com.example.androidapp.domain.util.ScoreUtil
+import com.example.androidapp.domain.util.QuestionShuffler
+import com.example.androidapp.domain.util.ScoreCalculator
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -35,6 +36,7 @@ sealed class TakeQuizUiState {
         val allAnswers: Map<String, Set<String>> = emptyMap(),
         val shouldNavigateBack: Boolean = false
     ) : TakeQuizUiState()
+
     data class Finished(val attemptId: String) : TakeQuizUiState()
     data class Error(val message: String) : TakeQuizUiState()
 }
@@ -104,7 +106,11 @@ class TakeQuizViewModel(
                 return@launch
             }
             quizTitle = quiz.title
-            questions = quizRepository.getQuestionsForQuizOnce(quizId).shuffled()
+            questions = QuestionShuffler.shuffle(
+                questions = quizRepository.getQuestionsForQuizOnce(quizId),
+                getChoices = { it.choices },
+                copyWithNewChoices = { q, newChoices -> q.copy(choices = newChoices) }
+            )
             if (questions.isEmpty()) {
                 _uiState.value = TakeQuizUiState.Error("Bài kiểm tra chưa có câu hỏi")
                 return@launch
@@ -217,11 +223,11 @@ class TakeQuizViewModel(
     }
 
     private fun calculateScore(): Int {
-        return questions.count { question ->
-            val selected = answers[question.id] ?: emptySet()
-            val correct = question.choices.filter { it.isCorrect }.map { it.id }.toSet()
-            selected == correct
+        val correctAnswers: Map<String, Set<String>> = questions.associate { question ->
+            question.id to question.choices.filter { it.isCorrect }.map { it.id }.toSet()
         }
+        val userAnswers: Map<String, Set<String>> = answers.mapValues { (_, v) -> v.toSet() }
+        return ScoreCalculator.calculateCorrectCount(correctAnswers, userAnswers)
     }
 
     private fun emitActiveState() {
@@ -245,4 +251,3 @@ class TakeQuizViewModel(
         super.onCleared()
     }
 }
-

@@ -11,6 +11,16 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 
+/**
+ * Displays a placeholder UI when a list or content area has no data.
+ * Shows a faded icon, a descriptive message, and an optional action button.
+ *
+ * @param message Text explaining why the area is empty.
+ * @param icon Icon displayed above the message.
+ * @param actionLabel Optional label for a call-to-action button.
+ * @param onActionClick Optional callback invoked when the action button is tapped.
+ * @param modifier Modifier for styling and layout customization.
+ */
 @Composable
 fun EmptyState(
     message: String,

@@ -176,6 +176,7 @@ fun BottomSheetSectionHeader(
  * @param onCopyCode Callback when copy code is clicked.
  * @param onShareLink Callback when share link is clicked.
  * @param onShareQR Callback when share QR code is clicked.
+ * @param modifier Modifier for styling and layout customization.
  * @param onRegenerateCode Optional callback for regenerating the code.
  */
 @Composable
@@ -185,12 +186,14 @@ fun ShareBottomSheet(
     shareCode: String,
     onCopyCode: () -> Unit,
     onShareLink: () -> Unit,
+    modifier: Modifier = Modifier,
     onShareQR: (() -> Unit)? = null,
     onRegenerateCode: (() -> Unit)? = null
 ) {
     AppBottomSheet(
         showSheet = showSheet,
         onDismiss = onDismiss,
+        modifier = modifier,
         title = stringResource(R.string.share_quiz_title)
     ) {
         // Share code display
@@ -271,6 +274,7 @@ fun ShareBottomSheet(
  * @param onEdit Callback for edit action.
  * @param onShare Callback for share action.
  * @param onDelete Callback for delete action.
+ * @param modifier Modifier for styling and layout customization.
  * @param onDuplicate Optional callback for duplicate action.
  * @param editEnabled Whether edit is enabled.
  * @param deleteEnabled Whether delete is enabled.
@@ -282,6 +286,7 @@ fun OptionsBottomSheet(
     onEdit: () -> Unit,
     onShare: () -> Unit,
     onDelete: () -> Unit,
+    modifier: Modifier = Modifier,
     onDuplicate: (() -> Unit)? = null,
     editEnabled: Boolean = true,
     deleteEnabled: Boolean = true
@@ -289,6 +294,7 @@ fun OptionsBottomSheet(
     AppBottomSheet(
         showSheet = showSheet,
         onDismiss = onDismiss,
+        modifier = modifier,
         title = stringResource(R.string.options_title)
     ) {
         BottomSheetItem(
