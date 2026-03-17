@@ -55,8 +55,12 @@ class ShareCodeRepositoryImpl(
         oldShareCode: String
     ): Result<String> {
         return try {
-            remoteDataSource.deleteShareCode(oldShareCode)
-            generateShareCode(quizId)
+            // Create the new code first; only delete the old one after the new one is persisted.
+            val newCodeResult = generateShareCode(quizId)
+            if (newCodeResult.isSuccess) {
+                remoteDataSource.deleteShareCode(oldShareCode)
+            }
+            newCodeResult
         } catch (e: Exception) {
             Result.failure(e)
         }

@@ -89,7 +89,7 @@ class AppContainerImpl(override val context: Context) : AppContainer {
     override val networkMonitor: NetworkMonitor by lazy { NetworkMonitor(context) }
 
     override val syncManager: SyncManager by lazy {
-        SyncManager(pendingSyncDao, quizDao, quizRemoteDataSource, networkMonitor)
+        SyncManager(pendingSyncDao, quizDao, questionDao, choiceDao, quizRemoteDataSource, networkMonitor)
     }
 
     private val quizRemoteDataSource: QuizRemoteDataSource by lazy {

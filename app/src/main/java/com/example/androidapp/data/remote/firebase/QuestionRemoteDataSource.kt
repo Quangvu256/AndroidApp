@@ -36,12 +36,19 @@ class QuestionRemoteDataSource(private val firestore: FirebaseFirestore) {
         questionDto: QuestionDto,
         choiceDtos: List<ChoiceDto>
     ) {
-        val batch = firestore.batch()
         val questionRef = firestore.collection(FirestoreCollections.QUIZZES)
             .document(quizId)
             .collection(FirestoreCollections.QUESTIONS)
             .document(questionDto.id)
 
+        // Delete existing choices first to avoid leaving stale documents when choice IDs change.
+        val existingChoices = questionRef
+            .collection(FirestoreCollections.CHOICES)
+            .get()
+            .await()
+
+        val batch = firestore.batch()
+        existingChoices.documents.forEach { batch.delete(it.reference) }
         batch.set(questionRef, questionDto)
 
         choiceDtos.forEach { choice ->
