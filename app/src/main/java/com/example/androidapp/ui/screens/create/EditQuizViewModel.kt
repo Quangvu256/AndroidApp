@@ -19,21 +19,16 @@ import kotlinx.coroutines.launch
 /**
  * UI state for the Edit Quiz screen.
  *
- * ### Draft vs. Publish semantics
- * - A **draft** quiz is never public and never shared to the community pool.
- *   Both [isPublic] and [shareToPool] are forced to `false` while [isDraft] is `true`.
- * - Toggling [isPublic] or [shareToPool] to `true` implicitly sets [isDraft] to `false`
- *   (the user is signalling intent to publish), but does **not** publish on its own —
- *   the user must still press "Xuất bản".
- * - Pressing "Lưu nháp" always forces [isPublic] and [shareToPool] back to `false`
- *   before persisting, regardless of what the toggles show.
+ * A quiz can be in one of three states after saving:
+ * - **Draft** ([isDraft] = true, [isPublic] = false): saved privately, editable.
+ * - **Private** ([isDraft] = false, [isPublic] = false): saved but not publicly listed, editable.
+ * - **Public** ([isDraft] = false, [isPublic] = true): published and visible to everyone.
  *
  * @property quizId The ID of the quiz being edited.
  * @property title The quiz title.
  * @property description The quiz description.
  * @property thumbnailUrl Optional URL for the quiz cover image.
- * @property isPublic Whether the quiz will be publicly discoverable after publishing.
- *   Always `false` for drafts.
+ * @property isPublic Whether the quiz is publicly discoverable.
  * @property tags Comma-separated list of tags as raw input text.
  * @property questions The ordered list of question drafts.
  * @property isLoading Whether a save/publish operation is in progress or the quiz is being loaded.
@@ -41,8 +36,7 @@ import kotlinx.coroutines.launch
  * @property isDraft Whether the current version is saved only as a draft (not published).
  * @property isPublished Whether the quiz has been successfully published.
  * @property lastSavedAt Epoch millis of the last draft save, or null if never saved in this session.
- * @property shareToPool Whether to contribute each question to the community pool on publish.
- *   Always `false` for drafts.
+ * @property shareToPool Whether to contribute each question to the community pool after publishing.
  * @property error Current error message to display, or null when there is no error.
  */
 data class EditQuizUiState(
@@ -75,13 +69,7 @@ sealed class EditQuizEvent {
     /** Updates the quiz cover image URL. */
     data class ThumbnailUrlChanged(val thumbnailUrl: String) : EditQuizEvent()
 
-    /**
-     * Toggles the public visibility of the quiz.
-     *
-     * Enabling this implicitly exits draft mode — [EditQuizUiState.isDraft] becomes `false`
-     * so the user knows the next save will publish. Disabling returns to draft mode when
-     * [EditQuizUiState.shareToPool] is also off.
-     */
+    /** Toggles the public visibility of the quiz. */
     data class IsPublicChanged(val isPublic: Boolean) : EditQuizEvent()
 
     /** Updates the raw comma-separated tags string. */
@@ -103,12 +91,9 @@ sealed class EditQuizEvent {
     data class MoveQuestionDown(val index: Int) : EditQuizEvent()
 
     /**
-     * Saves the current form as a private draft.
-     *
-     * Regardless of what [EditQuizUiState.isPublic] and [EditQuizUiState.shareToPool]
-     * show in the UI, the persisted record will have both forced to `false`. The UI toggles
-     * are also reset to `false` after a successful draft save so the displayed state stays
-     * consistent with what was actually stored.
+     * Saves the current form as a draft without publishing.
+     * Sets [EditQuizUiState.isDraft] to true and records [EditQuizUiState.lastSavedAt].
+     * The quiz is saved with whatever [EditQuizUiState.isPublic] the user has set.
      */
     data object SaveDraft : EditQuizEvent()
 
@@ -121,12 +106,7 @@ sealed class EditQuizEvent {
     /** Legacy save alias — behaves identically to [PublishQuiz]. */
     data object SaveQuiz : EditQuizEvent()
 
-    /**
-     * Toggles whether each question will be contributed to the community pool on publish.
-     *
-     * Enabling this implicitly exits draft mode — [EditQuizUiState.isDraft] becomes `false`.
-     * Pool contribution only happens when the quiz is actually published, never on draft saves.
-     */
+    /** Toggles whether each question will be contributed to the community pool after publishing. */
     data class ShareToPoolChanged(val shareToPool: Boolean) : EditQuizEvent()
 
     /** Clears the current error message from the UI state. */
@@ -135,17 +115,8 @@ sealed class EditQuizEvent {
 
 /**
  * ViewModel for the Edit Quiz screen.
- *
  * Pre-populates the form from the repository and saves changes back.
- * Enforces the invariant that **draft quizzes are always private and never shared to the
- * community pool**:
- *
- * - [EditQuizEvent.SaveDraft] forces `isPublic = false` and `shareToPool = false` on
- *   the persisted record, then resets both toggles in the UI state.
- * - [EditQuizEvent.IsPublicChanged] and [EditQuizEvent.ShareToPoolChanged] set
- *   [EditQuizUiState.isDraft] to `false` when enabled (signalling publish intent) and
- *   back to `true` when both are disabled (returning to draft mode).
- * - [EditQuizEvent.PublishQuiz] always sets `isPublic = true` on the persisted record.
+ * Supports draft saving without publishing and explicit publish action.
  *
  * @param quizId The ID of the quiz to load and edit.
  * @param quizRepository Repository for persisting quizzes and questions.
@@ -182,12 +153,8 @@ class EditQuizViewModel(
             is EditQuizEvent.ThumbnailUrlChanged ->
                 _uiState.update { it.copy(thumbnailUrl = event.thumbnailUrl) }
 
-            is EditQuizEvent.IsPublicChanged -> _uiState.update { state ->
-                // Enabling public visibility exits draft mode.
-                // Disabling returns to draft mode only when shareToPool is also off.
-                val newIsDraft = if (event.isPublic) false else !state.shareToPool
-                state.copy(isPublic = event.isPublic, isDraft = newIsDraft)
-            }
+            is EditQuizEvent.IsPublicChanged ->
+                _uiState.update { it.copy(isPublic = event.isPublic) }
 
             is EditQuizEvent.TagsChanged ->
                 _uiState.update { it.copy(tags = event.tags) }
@@ -244,12 +211,8 @@ class EditQuizViewModel(
             is EditQuizEvent.SaveQuiz ->
                 onSaveQuiz(publishAfterSave = true)
 
-            is EditQuizEvent.ShareToPoolChanged -> _uiState.update { state ->
-                // Enabling share-to-pool exits draft mode.
-                // Disabling returns to draft mode only when isPublic is also off.
-                val newIsDraft = if (event.shareToPool) false else !state.isPublic
-                state.copy(shareToPool = event.shareToPool, isDraft = newIsDraft)
-            }
+            is EditQuizEvent.ShareToPoolChanged ->
+                _uiState.update { it.copy(shareToPool = event.shareToPool) }
 
             is EditQuizEvent.ClearError ->
                 _uiState.update { it.copy(error = null) }
@@ -288,7 +251,6 @@ class EditQuizViewModel(
                     description = quiz.description ?: "",
                     thumbnailUrl = quiz.thumbnailUrl ?: "",
                     isPublic = quiz.isPublic,
-                    // A quiz that is not public is treated as a draft on load.
                     isDraft = !quiz.isPublic,
                     tags = quiz.tags.joinToString(", "),
                     questions = drafts
@@ -300,17 +262,13 @@ class EditQuizViewModel(
     /**
      * Validates and persists the quiz.
      *
-     * ### Draft path (`publishAfterSave = false`)
-     * - `isPublic` is forced to `false` — drafts are always private.
-     * - `shareToPool` is skipped entirely — pool contribution never runs for drafts.
-     * - Both [EditQuizUiState.isPublic] and [EditQuizUiState.shareToPool] are reset to
-     *   `false` in the UI state after a successful save so the form reflects reality.
-     * - [EditQuizUiState.isDraft] is set to `true` and [EditQuizUiState.lastSavedAt] updated.
+     * When [publishAfterSave] is `true` the quiz is marked as published,
+     * [EditQuizUiState.isPublic] is forced to `true`, and [EditQuizUiState.isSaved]
+     * is set to trigger back navigation. Pool contribution only runs on the publish path.
      *
-     * ### Publish path (`publishAfterSave = true`)
-     * - `isPublic` is forced to `true`.
-     * - `shareToPool` contribution runs if the toggle is on.
-     * - [EditQuizUiState.isSaved] is set to `true` to trigger back navigation.
+     * When [publishAfterSave] is `false` the quiz is saved as a draft using whatever
+     * [EditQuizUiState.isPublic] value the user has set, and
+     * [EditQuizUiState.lastSavedAt] is updated.
      *
      * @param publishAfterSave `true` to publish, `false` to save as draft.
      */
@@ -345,8 +303,9 @@ class EditQuizViewModel(
                 .map { it.trim() }
                 .filter { it.isNotBlank() }
 
-            // Drafts are ALWAYS private. Publish forces public.
-            val effectiveIsPublic = publishAfterSave
+            // On publish, force isPublic = true regardless of the toggle.
+            // On draft save, respect whatever the user has set on the isPublic toggle.
+            val effectiveIsPublic = if (publishAfterSave) true else state.isPublic
 
             val quiz = Quiz(
                 id = quizId,
@@ -388,7 +347,8 @@ class EditQuizViewModel(
             result.fold(
                 onSuccess = {
                     if (publishAfterSave) {
-                        // Pool contribution only happens on publish, never on draft saves.
+                        // Contribute each question to the community pool if opted in.
+                        // Pool contribution only runs on publish, never on draft saves.
                         if (state.shareToPool) {
                             questions.forEach { question ->
                                 poolRepository.contributeQuestion(
@@ -407,18 +367,14 @@ class EditQuizViewModel(
                                 isSaved = true,
                                 isPublished = true,
                                 isDraft = false,
-                                isPublic = true
+                                isPublic = effectiveIsPublic
                             )
                         }
                     } else {
-                        // Reset both publish-only toggles to false so the UI reflects
-                        // what was actually stored (a private, non-pooled draft).
                         _uiState.update {
                             it.copy(
                                 isDraft = true,
                                 isPublished = false,
-                                isPublic = false,
-                                shareToPool = false,
                                 lastSavedAt = System.currentTimeMillis()
                             )
                         }

@@ -21,6 +21,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -37,6 +38,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.androidapp.R
 import com.example.androidapp.di.LocalAppContainer
+import com.example.androidapp.ui.components.forms.SwitchToggle
 import com.example.androidapp.ui.components.forms.TextInputField
 import com.example.androidapp.ui.components.navigation.AppTopBar
 import java.text.SimpleDateFormat
@@ -226,17 +228,39 @@ fun EditQuizScreen(
                     )
                 }
 
-                // Public toggle + share-to-pool toggle
-                // Both options are only meaningful for published quizzes. While the quiz is
-                // in draft mode (isDraft == true) the toggles are shown but disabled, and a
-                // hint explains that they take effect only on publish.
+                // Public toggle
                 item {
-                    PublishOptionsSection(
-                        isPublic = uiState.isPublic,
-                        shareToPool = uiState.shareToPool,
-                        isDraft = uiState.isDraft,
-                        onIsPublicChanged = { viewModel.onEvent(EditQuizEvent.IsPublicChanged(it)) },
-                        onShareToPoolChanged = { viewModel.onEvent(EditQuizEvent.ShareToPoolChanged(it)) }
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = stringResource(R.string.create_quiz_public),
+                                modifier = Modifier.weight(1f),
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                            Switch(
+                                checked = uiState.isPublic,
+                                onCheckedChange = { viewModel.onEvent(EditQuizEvent.IsPublicChanged(it)) }
+                            )
+                        }
+                        if (uiState.isPublic) {
+                            Text(
+                                text = stringResource(R.string.create_quiz_public_warning),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.padding(top = 2.dp, bottom = 4.dp)
+                            )
+                        }
+                    }
+                }
+
+                // Share to pool toggle
+                item {
+                    SwitchToggle(
+                        checked = uiState.shareToPool,
+                        onCheckedChange = { viewModel.onEvent(EditQuizEvent.ShareToPoolChanged(it)) },
+                        label = stringResource(R.string.create_quiz_share_to_pool),
+                        description = stringResource(R.string.create_quiz_share_to_pool_desc),
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
 
