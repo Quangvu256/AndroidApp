@@ -224,6 +224,20 @@ class QuizRepositoryImpl(
             }
         } catch (_: Exception) { }
     }
+
+    override suspend fun incrementAttemptCount(quizId: String): Result<Unit> {
+        return try {
+            quizDao.incrementAttemptCount(quizId)
+            ioScope.launch {
+                try {
+                    remoteDataSource.incrementAttemptCount(quizId)
+                } catch (_: Exception) { }
+            }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }
 
 

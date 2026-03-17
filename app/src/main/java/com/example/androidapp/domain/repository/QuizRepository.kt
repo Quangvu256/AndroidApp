@@ -92,5 +92,11 @@ interface QuizRepository {
      * Permanently deletes a quiz from both Room and Firestore.
      */
     suspend fun permanentlyDeleteQuiz(quizId: String): Result<Unit>
+
+    /**
+     * Increments the attempt count for a quiz by 1.
+     * Updates both Room and Firestore.
+     */
+    suspend fun incrementAttemptCount(quizId: String): Result<Unit>
 }
 

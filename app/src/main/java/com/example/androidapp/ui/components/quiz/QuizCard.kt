@@ -41,16 +41,18 @@ fun QuizCard(
             modifier = Modifier.fillMaxSize(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // 1. THUMBNAIL (ẢNH BÊN TRÁI)
-            AsyncImage(
-                model = quiz.thumbnailUrl,
-                contentDescription = null,
-                modifier = Modifier
-                    .width(100.dp)
-                    .fillMaxHeight()
-                    .background(MaterialTheme.colorScheme.surfaceVariant),
-                contentScale = ContentScale.Crop
-            )
+            // 1. THUMBNAIL (ẢNH BÊN TRÁI) - chỉ hiển thị khi có URL
+            if (!quiz.thumbnailUrl.isNullOrBlank()) {
+                AsyncImage(
+                    model = quiz.thumbnailUrl,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .width(100.dp)
+                        .fillMaxHeight()
+                        .background(MaterialTheme.colorScheme.surfaceVariant),
+                    contentScale = ContentScale.Crop
+                )
+            }
 
             // 2. NỘI DUNG (Ở GIỮA)
             Column(
