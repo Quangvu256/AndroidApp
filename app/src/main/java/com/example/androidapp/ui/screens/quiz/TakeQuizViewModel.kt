@@ -216,7 +216,10 @@ class TakeQuizViewModel(
 
             val result = attemptRepository.saveAttempt(attempt)
             _uiState.value = result.fold(
-                onSuccess = { TakeQuizUiState.Finished(attemptId) },
+                onSuccess = {
+                    quizRepository.incrementAttemptCount(quizId)
+                    TakeQuizUiState.Finished(attemptId)
+                },
                 onFailure = { e -> TakeQuizUiState.Error(e.message ?: "Không thể lưu kết quả") }
             )
         }

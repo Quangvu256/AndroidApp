@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Upload
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilledTonalButton
@@ -76,6 +77,7 @@ import java.util.Locale
 fun CreateQuizScreen(
     onNavigateBack: () -> Unit,
     onSaveComplete: () -> Unit,
+    onNavigateToCsvImport: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val container = LocalAppContainer
@@ -132,6 +134,13 @@ fun CreateQuizScreen(
                 canNavigateBack = true,
                 navigateUp = onNavigateBack,
                 actions = {
+                    IconButton(onClick = onNavigateToCsvImport) {
+                        Icon(
+                            imageVector = Icons.Default.Upload,
+                            contentDescription = stringResource(R.string.create_import_csv_cd),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                     TextButton(
                         onClick = { viewModel.onEvent(CreateQuizEvent.SaveDraft) },
                         enabled = !uiState.isLoading
@@ -193,6 +202,17 @@ fun CreateQuizScreen(
                     value = uiState.title,
                     onValueChange = { viewModel.onEvent(CreateQuizEvent.TitleChanged(it)) },
                     label = stringResource(R.string.create_quiz_title_label),
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+            }
+
+            // Thumbnail URL
+            item {
+                TextInputField(
+                    value = uiState.thumbnailUrl,
+                    onValueChange = { viewModel.onEvent(CreateQuizEvent.ThumbnailUrlChanged(it)) },
+                    label = stringResource(R.string.create_quiz_thumbnail_url_label),
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )

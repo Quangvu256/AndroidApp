@@ -23,6 +23,10 @@ import kotlinx.coroutines.launch
  * ket qua, luu lich su tim kiem qua [SearchRepository], va cung cap loc tag,
  * sap xep, chuyen doi che do xem (grid/list).
  *
+ * Ngoai ra, khi khoi dong se tai du lieu Kham pha (discover): tag cloud, cac
+ * muc "Top hom nay", "Noi bat", "Trending", "Top toan thoi gian" tu cac quiz
+ * cong khai, giu phan man hinh luon co noi dung khi nguoi dung chua tim kiem.
+ *
  * Ket qua tho ([Quiz]) duoc luu noi bo de ho tro loc tag; chi nhung ket qua
  * da loc va map thanh [QuizCardDraft] moi duoc phat ra trong [SearchUiState].
  */
@@ -49,6 +53,7 @@ class SearchViewModel(
     init {
         collectRecentSearches()
         observeQueryDebounce()
+        loadDiscoverData()
     }
 
     /**
@@ -108,6 +113,70 @@ class SearchViewModel(
                         performSearch(query)
                     }
                 }
+        }
+    }
+
+    /**
+     * Tai du lieu Kham pha phan man hinh tim kiem:
+     *  - [SearchUiState.discoverTags]        — tat ca tag tu quiz cong khai, sap xep theo tan suat giam dan.
+     *  - [SearchUiState.todayTopQuizzes]      — top 10 quiz moi nhat (createdAt giam dan).
+     *  - [SearchUiState.featuredQuizzes]      — top 8 quiz theo attemptCount giam dan, isPublic = true.
+     *  - [SearchUiState.trendingQuizzes]      — top 10 quiz theo attemptCount giam dan.
+     *  - [SearchUiState.allTimeTopQuizzes]    — top 10 quiz moi thoi dai theo attemptCount giam dan.
+     *
+     * Su dung [collectLatest] de phan ung voi cap nhat real-time tu Firestore.
+     */
+    private fun loadDiscoverData() {
+        _uiState.update { it.copy(isLoadingDiscover = true) }
+
+        viewModelScope.launch {
+            quizRepository.getPublicQuizzes().collectLatest { quizzes ->
+                // --- Tag cloud: dem tan suat, sap xep giam dan ---
+                val tagFrequency: Map<String, Int> = quizzes
+                    .flatMap { it.tags }
+                    .groupingBy { it }
+                    .eachCount()
+
+                val discoverTags: List<String> = tagFrequency.entries
+                    .sortedByDescending { it.value }
+                    .map { it.key }
+
+                // --- Top hom nay: 10 quiz moi nhat theo createdAt ---
+                val todayTopQuizzes: List<QuizCardDraft> = quizzes
+                    .sortedByDescending { it.createdAt }
+                    .take(10)
+                    .map { it.toCardDraft() }
+
+                // --- Noi bat: top 8 quiz cong khai theo attemptCount ---
+                val featuredQuizzes: List<QuizCardDraft> = quizzes
+                    .filter { it.isPublic }
+                    .sortedByDescending { it.attemptCount }
+                    .take(8)
+                    .map { it.toCardDraft() }
+
+                // --- Trending: top 10 quiz theo attemptCount ---
+                val trendingQuizzes: List<QuizCardDraft> = quizzes
+                    .sortedByDescending { it.attemptCount }
+                    .take(10)
+                    .map { it.toCardDraft() }
+
+                // --- Top toan thoi gian: top 10 quiz theo attemptCount tren toan bo ---
+                val allTimeTopQuizzes: List<QuizCardDraft> = quizzes
+                    .sortedByDescending { it.attemptCount }
+                    .take(10)
+                    .map { it.toCardDraft() }
+
+                _uiState.update { state ->
+                    state.copy(
+                        discoverTags = discoverTags,
+                        todayTopQuizzes = todayTopQuizzes,
+                        featuredQuizzes = featuredQuizzes,
+                        trendingQuizzes = trendingQuizzes,
+                        allTimeTopQuizzes = allTimeTopQuizzes,
+                        isLoadingDiscover = false
+                    )
+                }
+            }
         }
     }
 

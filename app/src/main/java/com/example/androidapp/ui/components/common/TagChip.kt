@@ -29,8 +29,8 @@ fun TagChip(
     text: String,
     modifier: Modifier = Modifier,
     isSelected: Boolean = false,
-    containerColor: Color = MaterialTheme.colorScheme.secondaryContainer,
-    labelColor: Color = MaterialTheme.colorScheme.onSecondaryContainer,
+    containerColor: Color = MaterialTheme.colorScheme.tertiaryContainer,
+    labelColor: Color = MaterialTheme.colorScheme.onTertiaryContainer,
     onClick: (() -> Unit)? = null
 ) {
     val actualContainerColor = if (isSelected) MaterialTheme.colorScheme.primary else containerColor

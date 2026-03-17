@@ -12,6 +12,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.androidapp.di.LocalAppContainer
 import com.example.androidapp.ui.components.navigation.BottomNavBar
 import com.example.androidapp.ui.components.navigation.CreateQuizFAB
 import com.example.androidapp.ui.navigation.Routes.Args
@@ -49,6 +51,9 @@ fun QuizzezNavHost(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
+    val currentUser by LocalAppContainer.authRepository.currentUser
+        .collectAsStateWithLifecycle(initialValue = null)
+
     Scaffold(
         bottomBar = {
             // Show bottom navigation bar only on main screens
@@ -66,10 +71,17 @@ fun QuizzezNavHost(
             }
         },
         floatingActionButton = {
-            // Show create quiz FAB only on the Home screen
+            // Show create quiz FAB only on the Home screen.
+            // If the user is not logged in, redirect to the login screen.
             if (currentRoute == Routes.HOME) {
                 CreateQuizFAB(
-                    onClick = { navController.navigate(Routes.QUIZ_CREATE) }
+                    onClick = {
+                        if (currentUser == null) {
+                            navController.navigate(Routes.LOGIN)
+                        } else {
+                            navController.navigate(Routes.QUIZ_CREATE)
+                        }
+                    }
                 )
             }
         }
@@ -87,6 +99,9 @@ fun QuizzezNavHost(
                     },
                     onNavigateToSearch = {
                         navController.navigate(Routes.SEARCH)
+                    },
+                    onNavigateToEditQuiz = { quizId ->
+                        navController.navigate(Routes.quizEdit(quizId))
                     }
                 )
             }
@@ -175,7 +190,8 @@ fun QuizzezNavHost(
             composable(Routes.QUIZ_CREATE) {
                 CreateQuizScreen(
                     onNavigateBack = { navController.popBackStack() },
-                    onSaveComplete = { navController.popBackStack() }
+                    onSaveComplete = { navController.popBackStack() },
+                    onNavigateToCsvImport = { navController.navigate(Routes.CSV_IMPORT) }
                 )
             }
 

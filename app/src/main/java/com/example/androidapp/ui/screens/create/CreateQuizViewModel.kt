@@ -57,6 +57,7 @@ data class ChoiceDraft(
  *
  * @property title The quiz title.
  * @property description The quiz description.
+ * @property thumbnailUrl Optional URL for the quiz cover image.
  * @property isPublic Whether the quiz is publicly discoverable.
  * @property tags Comma-separated list of tags as raw input text.
  * @property questions The ordered list of question drafts.
@@ -71,6 +72,7 @@ data class ChoiceDraft(
 data class CreateQuizUiState(
     val title: String = "",
     val description: String = "",
+    val thumbnailUrl: String = "",
     val isPublic: Boolean = false,
     val tags: String = "",
     val questions: List<QuestionDraft> = listOf(QuestionDraft()),
@@ -92,6 +94,9 @@ sealed class CreateQuizEvent {
 
     /** Updates the quiz description. */
     data class DescriptionChanged(val description: String) : CreateQuizEvent()
+
+    /** Updates the quiz cover image URL. */
+    data class ThumbnailUrlChanged(val thumbnailUrl: String) : CreateQuizEvent()
 
     /** Toggles the public visibility of the quiz. */
     data class IsPublicChanged(val isPublic: Boolean) : CreateQuizEvent()
@@ -165,6 +170,9 @@ class CreateQuizViewModel(
 
             is CreateQuizEvent.DescriptionChanged ->
                 _uiState.update { it.copy(description = event.description) }
+
+            is CreateQuizEvent.ThumbnailUrlChanged ->
+                _uiState.update { it.copy(thumbnailUrl = event.thumbnailUrl) }
 
             is CreateQuizEvent.IsPublicChanged ->
                 _uiState.update { it.copy(isPublic = event.isPublic) }
@@ -280,6 +288,7 @@ class CreateQuizViewModel(
                 ownerId = user?.id ?: "",
                 title = state.title,
                 description = state.description.takeIf { it.isNotBlank() },
+                thumbnailUrl = state.thumbnailUrl.takeIf { it.isNotBlank() },
                 authorName = user?.displayName ?: "",
                 tags = tags,
                 isPublic = effectiveIsPublic,

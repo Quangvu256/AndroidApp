@@ -22,6 +22,7 @@ import kotlinx.coroutines.launch
  * @property quizId The ID of the quiz being edited.
  * @property title The quiz title.
  * @property description The quiz description.
+ * @property thumbnailUrl Optional URL for the quiz cover image.
  * @property isPublic Whether the quiz is publicly discoverable.
  * @property tags Comma-separated list of tags as raw input text.
  * @property questions The ordered list of question drafts.
@@ -37,6 +38,7 @@ data class EditQuizUiState(
     val quizId: String = "",
     val title: String = "",
     val description: String = "",
+    val thumbnailUrl: String = "",
     val isPublic: Boolean = false,
     val tags: String = "",
     val questions: List<QuestionDraft> = emptyList(),
@@ -58,6 +60,9 @@ sealed class EditQuizEvent {
 
     /** Updates the quiz description. */
     data class DescriptionChanged(val description: String) : EditQuizEvent()
+
+    /** Updates the quiz cover image URL. */
+    data class ThumbnailUrlChanged(val thumbnailUrl: String) : EditQuizEvent()
 
     /** Toggles the public visibility of the quiz. */
     data class IsPublicChanged(val isPublic: Boolean) : EditQuizEvent()
@@ -138,6 +143,9 @@ class EditQuizViewModel(
 
             is EditQuizEvent.DescriptionChanged ->
                 _uiState.update { it.copy(description = event.description) }
+
+            is EditQuizEvent.ThumbnailUrlChanged ->
+                _uiState.update { it.copy(thumbnailUrl = event.thumbnailUrl) }
 
             is EditQuizEvent.IsPublicChanged ->
                 _uiState.update { it.copy(isPublic = event.isPublic) }
@@ -235,6 +243,7 @@ class EditQuizViewModel(
                     isLoading = false,
                     title = quiz.title,
                     description = quiz.description ?: "",
+                    thumbnailUrl = quiz.thumbnailUrl ?: "",
                     isPublic = quiz.isPublic,
                     isDraft = !quiz.isPublic,
                     tags = quiz.tags.joinToString(", "),
@@ -291,6 +300,7 @@ class EditQuizViewModel(
                 ownerId = user?.id ?: "",
                 title = state.title,
                 description = state.description.takeIf { it.isNotBlank() },
+                thumbnailUrl = state.thumbnailUrl.takeIf { it.isNotBlank() },
                 authorName = user?.displayName ?: "",
                 tags = tags,
                 isPublic = effectiveIsPublic,

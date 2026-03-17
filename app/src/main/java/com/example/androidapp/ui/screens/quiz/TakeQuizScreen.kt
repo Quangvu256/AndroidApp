@@ -1,5 +1,7 @@
 package com.example.androidapp.ui.screens.quiz
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -17,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -25,10 +28,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import coil.compose.AsyncImage
 import com.example.androidapp.R
 import com.example.androidapp.di.LocalAppContainer
 import com.example.androidapp.domain.model.Choice
+import com.example.androidapp.ui.components.common.MediaDisplay
 import com.example.androidapp.ui.components.feedback.ErrorState
 import com.example.androidapp.ui.components.feedback.LoadingSpinner
 import com.example.androidapp.ui.theme.FullShape
@@ -157,6 +160,7 @@ private fun ActiveQuizContent(
     modifier: Modifier = Modifier
 ) {
     val isLast = state.currentIndex == state.totalQuestions - 1
+    val context = LocalContext.current
 
     Column(modifier = modifier.background(MaterialTheme.colorScheme.background)) {
         // ── Thin top progress bar ──────────────────────────────────────────
@@ -190,18 +194,18 @@ private fun ActiveQuizContent(
             contentPadding = PaddingValues(horizontal = 24.dp, vertical = 28.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            // Hero image (if available)
+            // Hero media (image or video, if available)
             if (!state.currentQuestion.mediaUrl.isNullOrBlank()) {
                 item {
-                    AsyncImage(
-                        model = state.currentQuestion.mediaUrl,
-                        contentDescription = null,
+                    MediaDisplay(
+                        mediaUrl = state.currentQuestion.mediaUrl,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .aspectRatio(16f / 9f)
-                            .clip(MaterialTheme.shapes.extraSmall)
-                            .background(MaterialTheme.colorScheme.surfaceVariant),
-                        contentScale = ContentScale.Crop
+                            .aspectRatio(16f / 9f),
+                        onVideoClick = {
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(state.currentQuestion.mediaUrl))
+                            context.startActivity(intent)
+                        }
                     )
                 }
             }

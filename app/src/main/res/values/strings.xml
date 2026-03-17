@@ -195,6 +195,11 @@
     <string name="sort_relevance">Liên quan nhất</string>
     <string name="toggle_view_cd">Chuyển đổi chế độ xem</string>
     <string name="search_no_results_title">Không tìm thấy kết quả</string>
+    <string name="search_discover_tags_header">Khám phá theo chủ đề</string>
+    <string name="search_section_today_top">Top hôm nay</string>
+    <string name="search_section_featured">Nổi bật</string>
+    <string name="search_section_trending">Trending</string>
+    <string name="search_section_all_time_top">Top toàn thời gian</string>
 
     <!-- Profile -->
 
@@ -255,6 +260,7 @@
     <string name="create_last_saved">Lưu lúc %1$s</string>
 
     <!-- Share to Pool -->
+    <string name="create_quiz_thumbnail_url_label">URL ảnh bìa (tùy chọn)</string>
     <string name="create_quiz_share_to_pool">Đóng góp câu hỏi vào cộng đồng</string>
     <string name="create_quiz_share_to_pool_desc">Cho phép người dùng khác sử dụng câu hỏi của bạn</string>
 
@@ -283,4 +289,10 @@
     <string name="csv_import_no_data">Không có dữ liệu hợp lệ</string>
     <string name="csv_import_template_format">Định dạng mẫu: question, choice_a, choice_b, choice_c, choice_d, correct</string>
     <string name="csv_import_file_selected">Tệp: %1$s</string>
+
+    <!-- Home -->
+    <string name="home_quiz_edit_cd">Chỉnh sửa nháp</string>
+
+    <!-- Create Quiz -->
+    <string name="create_import_csv_cd">Nhập từ CSV/Excel</string>
 </resources>

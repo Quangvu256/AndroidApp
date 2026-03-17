@@ -14,7 +14,7 @@ data class SearchUiState(
     val recentSearches: List<String> = emptyList(),
     val isSearching: Boolean = false,
 
-    // Task 2: Tag Filter
+    // Task 2: Tag Filter (dùng khi đang trong chế độ kết quả tìm kiếm)
     val availableTags: List<String> = emptyList(),
     val selectedTags: List<String> = emptyList(),
 
@@ -26,6 +26,26 @@ data class SearchUiState(
 
     // Task 5: Cờ xác định tùy chọn sắp xếp hiện tại
     val sortOption: SortOption = SortOption.RELEVANCE,
+
     // Task 6: Cờ xác định đã bấm tìm kiếm chưa (Dùng để hiện EmptyState)
-    val hasSearched: Boolean = false
+    val hasSearched: Boolean = false,
+
+    // Discover — hiển thị khi chưa tìm kiếm
+    /** Tất cả tag từ các quiz công khai, sắp xếp theo tần suất giảm dần. */
+    val discoverTags: List<String> = emptyList(),
+
+    /** Top 10 quiz mới nhất hôm nay (theo createdAt giảm dần). */
+    val todayTopQuizzes: List<QuizCardDraft> = emptyList(),
+
+    /** Top 8 quiz nổi bật (theo attemptCount giảm dần, isPublic = true). */
+    val featuredQuizzes: List<QuizCardDraft> = emptyList(),
+
+    /** Top 10 quiz đang trending (theo attemptCount giảm dần). */
+    val trendingQuizzes: List<QuizCardDraft> = emptyList(),
+
+    /** Top 10 quiz mọi thời đại (theo attemptCount giảm dần toàn bộ). */
+    val allTimeTopQuizzes: List<QuizCardDraft> = emptyList(),
+
+    /** Đang tải dữ liệu khám phá. */
+    val isLoadingDiscover: Boolean = false
 )

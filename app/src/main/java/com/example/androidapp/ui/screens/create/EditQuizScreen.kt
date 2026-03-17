@@ -192,6 +192,17 @@ fun EditQuizScreen(
                     )
                 }
 
+                // Thumbnail URL
+                item {
+                    TextInputField(
+                        value = uiState.thumbnailUrl,
+                        onValueChange = { viewModel.onEvent(EditQuizEvent.ThumbnailUrlChanged(it)) },
+                        label = stringResource(R.string.create_quiz_thumbnail_url_label),
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+                }
+
                 // Description
                 item {
                     TextInputField(
