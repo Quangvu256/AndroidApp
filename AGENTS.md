@@ -11,9 +11,16 @@ Android quiz app (Kotlin + Jetpack Compose + Firebase) named **Quizzez**. Users 
 ```
 domain/   ← Pure Kotlin. Models, repository interfaces, utilities. No Android/Firebase imports.
             model/      ← Domain models (Quiz, Question, Choice, Attempt, User, ShareCode, QuestionPoolItem)
-            repository/ ← Repository interfaces (QuizRepository, AttemptRepository, AuthRepository)
+            repository/ ← Repository interfaces (QuizRepository, AttemptRepository, AuthRepository,
+                          QuestionRepository, ShareCodeRepository, PoolRepository,
+                          StorageRepository, SearchRepository)
             usecase/    ← (currently empty; business logic lives directly in ViewModels)
-            util/       ← ScoreUtil (star-rating + percentage helpers)
+            util/       ← ScoreUtil (star-rating + percentage helpers), ChecksumUtil (SHA-256 quiz
+                          integrity), CsvParser + CsvValidator (CSV bulk import), QuizValidator
+                          (min 1 question / 2-10 choices / ≥1 correct), ScoreCalculator (exact
+                          set equality grading), QuestionShuffler, SearchFilterLogic (tag/
+                          visibility/date filtering), ShareCodeUtil (6-char alphanumeric gen),
+                          TimeFormatter (HH:MM:SS / MM:SS + timestamp formatting)
 data/     ← Firebase DTOs (remote/model/), remote data sources (remote/firebase/),
             Room entities (local/entity/), mapper extensions, repository impls.
 ui/       ← Compose screens + ViewModels. Screens are stateless; ViewModels own all state.
@@ -23,17 +30,28 @@ Data layer internal structure:
 ```
 data/
   local/
-    AppDatabase.kt          ← Room DB definition (v2) + migrations
+    AppDatabase.kt          ← Room DB definition (v3) + MIGRATION_1_2, MIGRATION_2_3
     EntityMappers.kt        ← Extension fns: Entity ↔ Domain (toDomain / toEntity)
     converter/Converters.kt ← Room TypeConverters using Gson
     dao/                    ← DAOs (QuizDao, QuestionDao, ChoiceDao, AttemptDao, UserDao, PendingSyncDao)
-    entity/                 ← Room entities + SyncStatus / PendingSyncStatus enums
+    entity/                 ← Room entities + SyncStatus / PendingSyncStatus / SyncEntityType / SyncOperation enums
   remote/
     AppMappers.kt           ← Extension fns: DTO ↔ Domain (toDomain / toDto)
-    firebase/               ← Remote data sources (QuizRemoteDataSource, AttemptRemoteDataSource, UserRemoteDataSource)
+    firebase/               ← Remote data sources (QuizRemoteDataSource, AttemptRemoteDataSource,
+                              UserRemoteDataSource, QuestionRemoteDataSource,
+                              ShareCodeRemoteDataSource, PoolRemoteDataSource)
     model/                  ← Firestore DTOs: `QuizDtoModels.kt` (QuizDto + QuestionDto + ChoiceDto),
                               `AttemptDto.kt`, `UserDto.kt`, `ShareCodeDto.kt`, `QuestionPoolItemDto.kt`
-  repository/               ← Repository implementations: `QuizRepositoryImpl.kt`, `AttemptRepositoryImpl.kt`, `AuthRepositoryImpl.kt` (wraps FirebaseAuth + UserDao)
+  repository/               ← Repository implementations: `QuizRepositoryImpl.kt`, `AttemptRepositoryImpl.kt`,
+                              `AuthRepositoryImpl.kt` (wraps FirebaseAuth + UserDao),
+                              `QuestionRepositoryImpl.kt`, `ShareCodeRepositoryImpl.kt`,
+                              `PoolRepositoryImpl.kt`, `StorageRepositoryImpl.kt` (wraps Firebase Storage),
+                              `SearchRepositoryImpl.kt` (SharedPreferences-backed recent searches)
+  network/
+    NetworkMonitor.kt       ← ConnectivityManager wrapper; exposes `isOnline: StateFlow<Boolean>`
+  sync/
+    SyncManager.kt          ← Active sync coordinator; `SyncState` enum (IDLE/SYNCING/PENDING/ERROR);
+                              `enqueueSync()`, `processPendingOperations()`, `retryFailedOperations()`
 ```
 
 Repositories do **not** touch Firestore directly — they delegate to `*RemoteDataSource` classes in `data/remote/firebase/`.
@@ -84,7 +102,7 @@ Use `sealed class` for states with distinct phases (e.g., `TakeQuizUiState`); us
 Reusable components live in `ui/components/` organized by category:
 - `common/` — AlertDialog, BottomSheet, MediaDisplay, TagChip
 - `feedback/` — EmptyState, ErrorState, LoadingSpinner, ScoreCard, SkeletonLoader (`shimmerEffect()` Modifier extension)
-- `forms/` — CodeInputField, DropdownSelector, SwitchToggle, TextInputField
+- `forms/` — CodeInputField, DropdownSelector, SwitchToggle, TextInputField, QuizSearchBar
 - `navigation/` — AppTopBar, BottomNavBar, CreateQuizFAB
 - `quiz/` — ChoiceButton, DynamicChoiceList, QuizCard, QuizProgressIndicator, TimerDisplay
 
@@ -115,12 +133,12 @@ Firestore operations: use batch writes for multi-document mutations; use `callba
 Routes are string constants in `ui/navigation/Routes.kt`. Typed destinations live in the `NavigationDestination` sealed class. The single `NavHost` entry point is `QuizzezNavHost` (rendered from `MainActivity`). Bottom nav shows only on `HOME`, `SEARCH`, `PROFILE` routes.
 
 Existing screen directories under `ui/screens/`:
-- `auth/` — `LoginScreen`, `RegisterScreen`, `AuthViewModel` (shared auth state)
+- `auth/` — `LoginScreen`, `RegisterScreen`, `AuthViewModel` (shared auth state), `AuthFragment` (XML Fragment with TabLayout; wraps Login/Register tabs and "Continue as Guest")
 - `home/` — `HomeScreen`, `HomeViewModel`
-- `search/` — `SearchScreen`, `SearchViewModel`
-- `profile/` — `ProfileScreen`, `ProfileViewModel`
+- `search/` — `SearchScreen`, `SearchViewModel`; state and events are split into standalone files (`SearchUiState.kt`, `SearchEvent.kt`); display model `QuizCardDraft` and sub-composables (`SearchControlsRow`, `TagFilterRow`, `SearchResultsGrid`, `SearchResultsList`) also live in this package
+- `profile/` — `ProfileScreen`, `ProfileViewModel`, `EditProfileScreen`, `EditProfileViewModel`
 - `quiz/` — `QuizDetailScreen`/`ViewModel`, `TakeQuizScreen`/`ViewModel`, `QuizResultScreen`/`ViewModel`
-- `create/` — `CreateQuizScreen`/`ViewModel`, `EditQuizScreen`/`EditQuizViewModel`, `SharedQuizViewModel`
+- `create/` — `CreateQuizScreen`/`ViewModel`, `EditQuizScreen`/`EditQuizViewModel`, `SharedQuizViewModel`, `CsvImportScreen`/`CsvImportViewModel`, `QuizPreviewScreen`/`QuizPreviewViewModel`
 - `history/` — `HistoryScreen`, `HistoryViewModel`
 - `review/` — `AnswerReviewScreen`, `AnswerReviewViewModel`
 - `attempt/` — `AttemptDetailScreen`, `AttemptDetailViewModel`
@@ -164,10 +182,12 @@ build-debug | build-release | test | lint | clean | firebase-emulators
 | `design-tokens.json` | Source of truth for all design values |
 | `CODE_RULES.md` | Full coding standards with examples |
 | `Docs_en/` | Architecture, backend, frontend, and behavior docs |
-| `data/local/AppDatabase.kt` | Room DB v2 definition + `MIGRATION_1_2` |
+| `data/local/AppDatabase.kt` | Room DB v3 definition + `MIGRATION_1_2`, `MIGRATION_2_3` |
 | `data/local/EntityMappers.kt` | Entity ↔ Domain extension functions (`toDomain` / `toEntity`) |
 | `data/remote/AppMappers.kt` | DTO ↔ Domain extension functions (`toDomain` / `toDto`) |
 | `data/remote/firebase/FirestoreCollections.kt` | Firestore collection/field name constants |
 | `data/remote/model/QuizDtoModels.kt` | QuizDto, QuestionDto, and ChoiceDto all in one file |
+| `data/network/NetworkMonitor.kt` | Online/offline state; exposes `isOnline: StateFlow<Boolean>` |
+| `data/sync/SyncManager.kt` | Sync queue coordinator; `SyncState` enum; delegates to `PendingSyncDao` |
 | `domain/repository/AuthRepository.kt` | Auth interface: `currentUser: Flow<User?>`, login, register, logout |
 
