@@ -26,6 +26,9 @@ data class QuizEntity(
     @ColumnInfo(name = "share_code")
     val shareCode: String? = null,
 
+    @ColumnInfo(name = "thumbnail_url")
+    val thumbnailUrl: String? = null,
+
     val tags: String = "", // Stored as comma-separated values
 
     val checksum: String? = null,

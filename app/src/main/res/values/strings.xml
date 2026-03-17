@@ -295,4 +295,5 @@
 
     <!-- Create Quiz -->
     <string name="create_import_csv_cd">Nhập từ CSV/Excel</string>
+    <string name="create_publish_options_draft_hint">Tùy chọn "Công khai" và "Đóng góp câu hỏi" chỉ áp dụng khi xuất bản. Bật một trong hai để thoát chế độ nháp, hoặc nhấn "Xuất bản" để xuất bản ngay.</string>
 </resources>

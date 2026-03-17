@@ -40,7 +40,7 @@ import com.example.androidapp.data.local.entity.UserEntity
         UserEntity::class,
         PendingSyncEntity::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -114,6 +114,20 @@ abstract class AppDatabase : RoomDatabase() {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL(
                     "ALTER TABLE `users` ADD COLUMN `photo_url` TEXT"
+                )
+            }
+        }
+
+        /**
+         * Migration from version 3 to 4.
+         * Adds the `thumbnail_url` column to the `quizzes` table so that cover
+         * image URLs entered by the user are persisted locally and survive
+         * read-back from Room without being silently dropped.
+         */
+        val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "ALTER TABLE `quizzes` ADD COLUMN `thumbnail_url` TEXT"
                 )
             }
         }
