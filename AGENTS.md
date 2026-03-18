@@ -30,7 +30,7 @@ Data layer internal structure:
 ```
 data/
   local/
-    AppDatabase.kt          ← Room DB definition (v3) + MIGRATION_1_2, MIGRATION_2_3
+    AppDatabase.kt          ← Room DB definition (v4); uses fallbackToDestructiveMigration (no explicit migrations)
     EntityMappers.kt        ← Extension fns: Entity ↔ Domain (toDomain / toEntity)
     converter/Converters.kt ← Room TypeConverters using Gson
     dao/                    ← DAOs (QuizDao, QuestionDao, ChoiceDao, AttemptDao, UserDao, PendingSyncDao)
@@ -84,7 +84,7 @@ fun onEvent(event: HomeEvent) { ... }
 
 Use `sealed class` for states with distinct phases (e.g., `TakeQuizUiState`); use `data class` for simple flag-bearing states (e.g., `HomeUiState`).
 
-**Shared ViewModel**: For cross-screen state within a navigation sub-graph, use a dedicated shared ViewModel scoped to the `NavBackStackEntry`. Example: `SharedQuizViewModel` (`ui/screens/create/`) holds `editingIndex` and `editingDraft` shared between `CreateQuizScreen` and a question editor without passing state through nav arguments.
+**Shared ViewModel**: For cross-screen state within a navigation sub-graph, use a dedicated shared ViewModel scoped to the `NavBackStackEntry`, shared between composables via the parent back-stack entry without passing state through nav arguments.
 
 **Draft models**: Form-state data classes used only in the UI layer live alongside the ViewModel that owns them, not in `domain/`. Example: `QuestionDraft` and `ChoiceDraft` are defined in `ui/screens/create/CreateQuizViewModel.kt`.
 
@@ -135,10 +135,10 @@ Routes are string constants in `ui/navigation/Routes.kt`. Typed destinations liv
 Existing screen directories under `ui/screens/`:
 - `auth/` — `LoginScreen`, `RegisterScreen`, `AuthViewModel` (shared auth state), `AuthFragment` (XML Fragment with TabLayout; wraps Login/Register tabs and "Continue as Guest")
 - `home/` — `HomeScreen`, `HomeViewModel`
-- `search/` — `SearchScreen`, `SearchViewModel`; state and events are split into standalone files (`SearchUiState.kt`, `SearchEvent.kt`); display model `QuizCardDraft` and sub-composables (`SearchControlsRow`, `TagFilterRow`, `SearchResultsGrid`, `SearchResultsList`) also live in this package
+- `search/` — `SearchScreen`, `SearchViewModel`; state and events are split into standalone files (`SearchUiState.kt`, `SearchEvent.kt`); display model `QuizCardDraft` and sub-composables (`SearchControlsRow`, `TagFilterRow`, `SearchResultsGrid`, `SearchResultsList`, `DiscoverSection`) also live in this package; `SortOption` enum (DATE / POPULARITY / RELEVANCE) is defined in `SearchUiState.kt`
 - `profile/` — `ProfileScreen`, `ProfileViewModel`, `EditProfileScreen`, `EditProfileViewModel`
 - `quiz/` — `QuizDetailScreen`/`ViewModel`, `TakeQuizScreen`/`ViewModel`, `QuizResultScreen`/`ViewModel`
-- `create/` — `CreateQuizScreen`/`ViewModel`, `EditQuizScreen`/`EditQuizViewModel`, `SharedQuizViewModel`, `CsvImportScreen`/`CsvImportViewModel`, `QuizPreviewScreen`/`QuizPreviewViewModel`
+- `create/` — `CreateQuizScreen`/`ViewModel`, `EditQuizScreen`/`EditQuizViewModel`, `CsvImportScreen`/`CsvImportViewModel`, `QuizPreviewScreen`/`QuizPreviewViewModel`
 - `history/` — `HistoryScreen`, `HistoryViewModel`
 - `review/` — `AnswerReviewScreen`, `AnswerReviewViewModel`
 - `attempt/` — `AttemptDetailScreen`, `AttemptDetailViewModel`
@@ -182,7 +182,7 @@ build-debug | build-release | test | lint | clean | firebase-emulators
 | `design-tokens.json` | Source of truth for all design values |
 | `CODE_RULES.md` | Full coding standards with examples |
 | `Docs_en/` | Architecture, backend, frontend, and behavior docs |
-| `data/local/AppDatabase.kt` | Room DB v3 definition + `MIGRATION_1_2`, `MIGRATION_2_3` |
+| `data/local/AppDatabase.kt` | Room DB v4 definition; `fallbackToDestructiveMigration` — no explicit migrations |
 | `data/local/EntityMappers.kt` | Entity ↔ Domain extension functions (`toDomain` / `toEntity`) |
 | `data/remote/AppMappers.kt` | DTO ↔ Domain extension functions (`toDomain` / `toDto`) |
 | `data/remote/firebase/FirestoreCollections.kt` | Firestore collection/field name constants |
