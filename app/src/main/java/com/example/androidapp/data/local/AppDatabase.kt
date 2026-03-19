@@ -3,8 +3,6 @@ package com.example.androidapp.data.local
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
-import androidx.room.migration.Migration
-import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.androidapp.data.local.converter.Converters
 import com.example.androidapp.data.local.dao.AttemptDao
 import com.example.androidapp.data.local.dao.ChoiceDao
@@ -40,7 +38,7 @@ import com.example.androidapp.data.local.entity.UserEntity
         UserEntity::class,
         PendingSyncEntity::class
     ],
-    version = 2,
+    version = 4,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -77,30 +75,6 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun pendingSyncDao(): PendingSyncDao
 
     companion object {
-        const val DATABASE_NAME = "quizcode_database"
-
-        /**
-         * Migration from version 1 to 2.
-         * Adds the pending_sync_operations table for offline sync queue.
-         */
-        val MIGRATION_1_2 = object : Migration(1, 2) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                db.execSQL("""
-                    CREATE TABLE IF NOT EXISTS `pending_sync_operations` (
-                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-                        `entity_type` TEXT NOT NULL,
-                        `entity_id` TEXT NOT NULL,
-                        `operation` TEXT NOT NULL,
-                        `payload` TEXT NOT NULL DEFAULT '',
-                        `status` TEXT NOT NULL DEFAULT 'PENDING',
-                        `retry_count` INTEGER NOT NULL DEFAULT 0,
-                        `max_retries` INTEGER NOT NULL DEFAULT 3,
-                        `error_message` TEXT,
-                        `created_at` INTEGER NOT NULL,
-                        `last_attempt_at` INTEGER
-                    )
-                """.trimIndent())
-            }
-        }
+        const val DATABASE_NAME = "app_database"
     }
 }

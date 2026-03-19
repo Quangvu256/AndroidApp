@@ -9,6 +9,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
+/**
+ * Full-screen centered loading indicator with an optional message.
+ *
+ * @param modifier Modifier for styling and layout customization.
+ * @param message Optional text displayed below the spinner (e.g., "Dang dang nhap...").
+ */
 @Composable
 fun LoadingSpinner(
     modifier: Modifier = Modifier,

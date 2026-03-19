@@ -24,7 +24,7 @@ fun QuizEntity.toDomain(): Quiz = Quiz(
     title = title,
     description = description,
     authorName = "",
-    thumbnailUrl = null,
+    thumbnailUrl = thumbnailUrl,
     tags = if (tags.isBlank()) emptyList() else tags.split(",").map { it.trim() },
     questionCount = questionCount,
     attemptCount = attemptCount,
@@ -41,6 +41,7 @@ fun Quiz.toEntity(syncStatus: String = "SYNCED"): QuizEntity = QuizEntity(
     ownerId = ownerId,
     title = title,
     description = description,
+    thumbnailUrl = thumbnailUrl,
     isPublic = isPublic,
     shareCode = shareCode,
     tags = tags.joinToString(","),
@@ -148,7 +149,7 @@ fun UserEntity.toDomain(): User = User(
     email = email,
     displayName = displayName ?: username,
     username = username,
-    photoUrl = null
+    photoUrl = photoUrl
 )
 
 /** Maps domain [User] to [UserEntity] for Room storage. */
@@ -156,6 +157,6 @@ fun User.toEntity(): UserEntity = UserEntity(
     id = id,
     username = username,
     email = email,
-    displayName = displayName
+    displayName = displayName,
+    photoUrl = photoUrl
 )
-

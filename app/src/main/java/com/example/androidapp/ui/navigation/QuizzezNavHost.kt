@@ -12,15 +12,21 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.androidapp.di.LocalAppContainer
 import com.example.androidapp.ui.components.navigation.BottomNavBar
+import com.example.androidapp.ui.components.navigation.CreateQuizFAB
 import com.example.androidapp.ui.navigation.Routes.Args
 import com.example.androidapp.ui.screens.auth.LoginScreen
 import com.example.androidapp.ui.screens.auth.RegisterScreen
 import com.example.androidapp.ui.screens.attempt.AttemptDetailScreen
 import com.example.androidapp.ui.screens.create.CreateQuizScreen
+import com.example.androidapp.ui.screens.create.CsvImportScreen
 import com.example.androidapp.ui.screens.create.EditQuizScreen
+import com.example.androidapp.ui.screens.create.QuizPreviewScreen
 import com.example.androidapp.ui.screens.history.HistoryScreen
 import com.example.androidapp.ui.screens.home.HomeScreen
+import com.example.androidapp.ui.screens.profile.EditProfileScreen
 import com.example.androidapp.ui.screens.profile.ProfileScreen
 import com.example.androidapp.ui.screens.quiz.QuizDetailScreen
 import com.example.androidapp.ui.screens.quiz.QuizResultScreen
@@ -45,6 +51,9 @@ fun QuizzezNavHost(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
+    val currentUser by LocalAppContainer.authRepository.currentUser
+        .collectAsStateWithLifecycle(initialValue = null)
+
     Scaffold(
         bottomBar = {
             // Show bottom navigation bar only on main screens
@@ -56,6 +65,21 @@ fun QuizzezNavHost(
                             popUpTo(Routes.HOME) { saveState = true }
                             launchSingleTop = true
                             restoreState = true
+                        }
+                    }
+                )
+            }
+        },
+        floatingActionButton = {
+            // Show create quiz FAB only on the Home screen.
+            // If the user is not logged in, redirect to the login screen.
+            if (currentRoute == Routes.HOME) {
+                CreateQuizFAB(
+                    onClick = {
+                        if (currentUser == null) {
+                            navController.navigate(Routes.LOGIN)
+                        } else {
+                            navController.navigate(Routes.QUIZ_CREATE)
                         }
                     }
                 )
@@ -75,6 +99,9 @@ fun QuizzezNavHost(
                     },
                     onNavigateToSearch = {
                         navController.navigate(Routes.SEARCH)
+                    },
+                    onNavigateToEditQuiz = { quizId ->
+                        navController.navigate(Routes.quizEdit(quizId))
                     }
                 )
             }
@@ -92,7 +119,14 @@ fun QuizzezNavHost(
                     onNavigateToLogin = { navController.navigate(Routes.LOGIN) },
                     onNavigateToSettings = { navController.navigate(Routes.SETTINGS) },
                     onNavigateToHistory = { navController.navigate(Routes.HISTORY) },
-                    onNavigateToTrash = { navController.navigate(Routes.TRASH) }
+                    onNavigateToTrash = { navController.navigate(Routes.TRASH) },
+                    onNavigateToEditProfile = { navController.navigate(Routes.PROFILE_EDIT) }
+                )
+            }
+
+            composable(Routes.PROFILE_EDIT) {
+                EditProfileScreen(
+                    onNavigateBack = { navController.popBackStack() }
                 )
             }
 
@@ -156,7 +190,20 @@ fun QuizzezNavHost(
             composable(Routes.QUIZ_CREATE) {
                 CreateQuizScreen(
                     onNavigateBack = { navController.popBackStack() },
-                    onSaveComplete = { navController.popBackStack() }
+                    onSaveComplete = { navController.popBackStack() },
+                    onNavigateToCsvImport = { navController.navigate(Routes.CSV_IMPORT) }
+                )
+            }
+
+            composable(Routes.CSV_IMPORT) {
+                CsvImportScreen(
+                    onNavigateBack = { navController.popBackStack() },
+                    onQuestionsImported = { _ ->
+                        // Questions are delivered via the callback.
+                        // Full cross-screen wiring requires a SharedViewModel;
+                        // navigate back so the caller can retrieve the result.
+                        navController.popBackStack()
+                    }
                 )
             }
 
@@ -169,6 +216,24 @@ fun QuizzezNavHost(
                     quizId = quizId,
                     onNavigateBack = { navController.popBackStack() },
                     onSaveComplete = { navController.popBackStack() }
+                )
+            }
+
+            composable(
+                route = Routes.QUIZ_PREVIEW,
+                arguments = listOf(navArgument(Args.QUIZ_ID) { type = NavType.StringType })
+            ) { backStackEntry ->
+                val quizId = backStackEntry.arguments?.getString(Args.QUIZ_ID) ?: return@composable
+                QuizPreviewScreen(
+                    quizId = quizId,
+                    onNavigateBack = { navController.popBackStack() },
+                    onPublish = {
+                        // After publishing, navigate to the quiz detail screen so the user
+                        // can see the published quiz, clearing the preview from the back stack.
+                        navController.navigate(Routes.quizDetail(quizId)) {
+                            popUpTo(Routes.quizPreview(quizId)) { inclusive = true }
+                        }
+                    }
                 )
             }
 

@@ -13,6 +13,17 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.VisualTransformation
 import com.example.androidapp.R
 
+/**
+ * Styled outlined text input field with built-in error and helper text support.
+ *
+ * @param value Current text value.
+ * @param onValueChange Callback when the text changes.
+ * @param label Label displayed above the field.
+ * @param modifier Modifier for styling and layout customization.
+ * @param errorMessage Optional error message shown below the field in red.
+ * @param helperText Optional helper text shown below the field when there is no error.
+ * @param visualTransformation Transformation for masking input (e.g., password fields).
+ */
 @Composable
 fun TextInputField(
     value: String,

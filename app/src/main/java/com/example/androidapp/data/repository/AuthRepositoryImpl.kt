@@ -11,6 +11,8 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.FirebaseAuthWeakPasswordException
+import com.google.firebase.auth.UserProfileChangeRequest
+import android.net.Uri
 import java.util.UUID
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -180,5 +182,58 @@ class AuthRepositoryImpl(
             Result.failure(Exception("Làm mới phiên đăng nhập thất bại", e))
         }
     }
-}
 
+    /**
+     * Updates the current user's display name and/or photo URL.
+     * Applies the change to Firebase Auth, then syncs to Firestore and the local Room cache.
+     * @param displayName The new display name to set.
+     * @param photoUrl The new photo URL to set, or null to leave unchanged.
+     * @return [Result.success] on success, or [Result.failure] with the error.
+     */
+    override suspend fun updateProfile(displayName: String, photoUrl: String?): Result<Unit> {
+        return try {
+            val firebaseUser = firebaseAuth.currentUser
+                ?: return Result.failure(Exception("Không có người dùng đang đăng nhập"))
+
+            // Build and apply the Firebase Auth profile update
+            val profileUpdates = UserProfileChangeRequest.Builder()
+                .setDisplayName(displayName)
+                .apply { if (photoUrl != null) setPhotoUri(Uri.parse(photoUrl)) }
+                .build()
+            firebaseUser.updateProfile(profileUpdates).await()
+
+            val uid = firebaseUser.uid
+
+            // Update local Room cache - preserve existing fields where possible
+            val existing = userDao.getUserById(uid)
+            if (existing != null) {
+                userDao.updateUser(
+                    existing.copy(
+                        displayName = displayName,
+                        photoUrl = photoUrl ?: existing.photoUrl
+                    )
+                )
+            }
+
+            // Sync updated profile to Firestore (non-fatal if offline)
+            try {
+                val currentDto = userRemoteDataSource.getUserById(uid)
+                userRemoteDataSource.saveUser(
+                    UserDto(
+                        id = uid,
+                        email = currentDto?.email ?: firebaseUser.email ?: "",
+                        displayName = displayName,
+                        username = currentDto?.username ?: "",
+                        photoUrl = photoUrl ?: currentDto?.photoUrl
+                    )
+                )
+            } catch (_: Exception) {
+                // Firestore sync failure is non-fatal; local cache already updated
+            }
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(Exception("Cập nhật hồ sơ thất bại", e))
+        }
+    }
+}

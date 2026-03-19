@@ -18,22 +18,28 @@ import com.example.androidapp.ui.theme.FullShape
  *
  * @param text The label text displayed inside the chip.
  * @param modifier Modifier for styling and layout customization.
- * @param containerColor Background color of the chip.
- * @param labelColor Text color of the chip label.
+ * @param isSelected Whether the chip is in a selected state. When true, the chip uses
+ *   primary/onPrimary colors, overriding [containerColor] and [labelColor].
+ * @param containerColor Background color of the chip (ignored when [isSelected] is true).
+ * @param labelColor Text color of the chip label (ignored when [isSelected] is true).
  * @param onClick Optional click callback (chip is non-interactive if null).
  */
 @Composable
 fun TagChip(
     text: String,
     modifier: Modifier = Modifier,
-    containerColor: Color = MaterialTheme.colorScheme.secondaryContainer,
-    labelColor: Color = MaterialTheme.colorScheme.onSecondaryContainer,
+    isSelected: Boolean = false,
+    containerColor: Color = MaterialTheme.colorScheme.tertiaryContainer,
+    labelColor: Color = MaterialTheme.colorScheme.onTertiaryContainer,
     onClick: (() -> Unit)? = null
 ) {
+    val actualContainerColor = if (isSelected) MaterialTheme.colorScheme.primary else containerColor
+    val actualLabelColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else labelColor
+
     Box(
         modifier = modifier
             .clip(FullShape)
-            .background(containerColor)
+            .background(actualContainerColor)
             .then(
                 if (onClick != null) {
                     Modifier.clickable(onClick = onClick)
@@ -46,7 +52,7 @@ fun TagChip(
         Text(
             text = text,
             style = MaterialTheme.typography.labelSmall,
-            color = labelColor
+            color = actualLabelColor
         )
     }
 }

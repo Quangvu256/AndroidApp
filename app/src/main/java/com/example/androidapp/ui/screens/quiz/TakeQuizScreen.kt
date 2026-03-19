@@ -1,5 +1,7 @@
 package com.example.androidapp.ui.screens.quiz
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -8,7 +10,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.outlined.Help
+import com.example.androidapp.ui.components.quiz.TimerDisplay
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -17,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -25,10 +28,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import coil.compose.AsyncImage
 import com.example.androidapp.R
 import com.example.androidapp.di.LocalAppContainer
 import com.example.androidapp.domain.model.Choice
+import com.example.androidapp.ui.components.common.MediaDisplay
 import com.example.androidapp.ui.components.feedback.ErrorState
 import com.example.androidapp.ui.components.feedback.LoadingSpinner
 import com.example.androidapp.ui.theme.FullShape
@@ -72,11 +75,13 @@ fun TakeQuizScreen(
             is TakeQuizUiState.Finished -> {
                 onQuizComplete(state.attemptId)
             }
+
             is TakeQuizUiState.Active -> {
                 if (state.shouldNavigateBack) {
                     onNavigateBack()
                 }
             }
+
             else -> {} // No action for Loading or Error
         }
     }
@@ -89,6 +94,7 @@ fun TakeQuizScreen(
                 onRetry = onNavigateBack,
                 modifier = Modifier.fillMaxSize()
             )
+
             is TakeQuizUiState.Active -> {
                 ActiveQuizContent(
                     state = state,
@@ -137,6 +143,7 @@ fun TakeQuizScreen(
                     )
                 }
             }
+
             is TakeQuizUiState.Finished -> LoadingSpinner(modifier = Modifier.fillMaxSize())
         }
     }
@@ -152,13 +159,13 @@ private fun ActiveQuizContent(
     onClose: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val progress = (state.currentIndex + 1).toFloat() / state.totalQuestions.coerceAtLeast(1)
     val isLast = state.currentIndex == state.totalQuestions - 1
+    val context = LocalContext.current
 
     Column(modifier = modifier.background(MaterialTheme.colorScheme.background)) {
         // ── Thin top progress bar ──────────────────────────────────────────
         LinearProgressIndicator(
-            progress = { progress },
+            progress = { (state.currentIndex + 1).toFloat() / state.totalQuestions.coerceAtLeast(1) },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(3.dp),
@@ -170,7 +177,8 @@ private fun ActiveQuizContent(
         QuizAppBar(
             currentIndex = state.currentIndex,
             totalQuestions = state.totalQuestions,
-            onClose = onClose
+            onClose = onClose,
+            secondsElapsed = state.elapsedSeconds.toLong()
         )
 
         HorizontalDivider(
@@ -186,18 +194,18 @@ private fun ActiveQuizContent(
             contentPadding = PaddingValues(horizontal = 24.dp, vertical = 28.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            // Hero image (if available)
+            // Hero media (image or video, if available)
             if (!state.currentQuestion.mediaUrl.isNullOrBlank()) {
                 item {
-                    AsyncImage(
-                        model = state.currentQuestion.mediaUrl,
-                        contentDescription = null,
+                    MediaDisplay(
+                        mediaUrl = state.currentQuestion.mediaUrl,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .aspectRatio(16f / 9f)
-                            .clip(MaterialTheme.shapes.extraSmall)
-                            .background(MaterialTheme.colorScheme.surfaceVariant),
-                        contentScale = ContentScale.Crop
+                            .aspectRatio(16f / 9f),
+                        onVideoClick = {
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(state.currentQuestion.mediaUrl))
+                            context.startActivity(intent)
+                        }
                     )
                 }
             }
@@ -246,6 +254,7 @@ private fun QuizAppBar(
     currentIndex: Int,
     totalQuestions: Int,
     onClose: () -> Unit,
+    secondsElapsed: Long,
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -277,17 +286,11 @@ private fun QuizAppBar(
             modifier = Modifier.align(Alignment.Center)
         )
 
-        // Help icon (right)
-        IconButton(
-            onClick = { /* TODO: open quiz help */ },
+        // Timer display (right)
+        TimerDisplay(
+            secondsElapsed = secondsElapsed,
             modifier = Modifier.align(Alignment.CenterEnd)
-        ) {
-            Icon(
-                imageVector = Icons.Outlined.Help,
-                contentDescription = stringResource(R.string.take_quiz_help_cd),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
+        )
     }
 }
 
@@ -419,4 +422,3 @@ private fun QuizFooter(
         }
     }
 }
-

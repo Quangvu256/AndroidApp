@@ -60,4 +60,13 @@ interface AuthRepository {
      * @return [Result.success] on success, or [Result.failure] with the error.
      */
     suspend fun refreshSession(): Result<Unit>
+
+    /**
+     * Updates the current user's display name and/or photo URL.
+     * Persists the change to Firebase Auth, Firestore, and the local Room cache.
+     * @param displayName The new display name to set.
+     * @param photoUrl The new photo URL to set, or null to leave unchanged.
+     * @return [Result.success] on success, or [Result.failure] with the error.
+     */
+    suspend fun updateProfile(displayName: String, photoUrl: String?): Result<Unit>
 }

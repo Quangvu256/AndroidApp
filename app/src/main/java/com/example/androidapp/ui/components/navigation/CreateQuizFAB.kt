@@ -11,6 +11,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.example.androidapp.R
 
+/**
+ * Extended floating action button for creating a new quiz.
+ *
+ * @param onClick Callback when the FAB is clicked.
+ * @param modifier Modifier for styling and layout customization.
+ * @param expanded Whether the FAB shows the extended label or collapses to icon-only.
+ */
 @Composable
 fun CreateQuizFAB(
     onClick: () -> Unit,

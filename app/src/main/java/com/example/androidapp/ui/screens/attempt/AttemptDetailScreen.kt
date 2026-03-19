@@ -33,7 +33,7 @@ import com.example.androidapp.ui.components.navigation.AppTopBar
 import com.example.androidapp.ui.theme.FullShape
 import com.example.androidapp.ui.theme.InterFamily
 import com.example.androidapp.ui.theme.PlayfairDisplayFamily
-import java.util.concurrent.TimeUnit
+
 
 /**
  * Attempt Detail screen showing detailed results of a single attempt.
@@ -82,11 +82,13 @@ fun AttemptDetailScreen(
             is AttemptDetailUiState.Loading -> LoadingSpinner(
                 modifier = Modifier.padding(innerPadding).fillMaxSize()
             )
+
             is AttemptDetailUiState.Error -> ErrorState(
                 message = state.message,
                 onRetry = { viewModel.onRetry() },
                 modifier = Modifier.padding(innerPadding).fillMaxSize()
             )
+
             is AttemptDetailUiState.Success -> AttemptDetailContent(
                 state = state,
                 onReviewAnswers = { onReviewAnswers(state.attempt.quizId, state.attempt.id) },
@@ -104,9 +106,7 @@ private fun AttemptDetailContent(
     onRetryQuiz: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val minutes = TimeUnit.MILLISECONDS.toMinutes(state.timeTakenMs)
-    val seconds = TimeUnit.MILLISECONDS.toSeconds(state.timeTakenMs) % 60
-    val timeTakenStr = "%d:%02d".format(minutes, seconds)
+    val timeTakenStr = state.timeTakenFormatted
 
     Column(
         modifier = modifier

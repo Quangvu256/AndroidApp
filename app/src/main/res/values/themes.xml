@@ -36,4 +36,10 @@
     </style>
 
     <style name="Theme.AndroidApp" parent="Base.Theme.AndroidApp" />
+
+    <!-- Shape overlay for TextInputLayout with small rounded corners (8dp) -->
+    <style name="ShapeAppearance.Quizzez.SmallComponent" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">@dimen/radius_sm</item>
+    </style>
 </resources>

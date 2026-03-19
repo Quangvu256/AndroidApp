@@ -60,6 +60,7 @@ android {
     buildFeatures {
         compose = true
         buildConfig = true
+        viewBinding = true
     }
     kotlinOptions {
         jvmTarget = "17"
@@ -78,6 +79,10 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
 
+    // Fragment + RecyclerView (for XML-based screens)
+    implementation(libs.androidx.fragment.ktx)
+    implementation(libs.androidx.recyclerview)
+
     // Compose (using BoM)
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.ui)
@@ -85,8 +90,6 @@ dependencies {
     implementation(libs.compose.ui.tooling.preview)
     implementation(libs.compose.material3)
     implementation(libs.compose.material.icons.extended)
-    implementation(libs.compose.runtime.livedata)
-    implementation(libs.core.ktx)
     debugImplementation(libs.compose.ui.tooling)
     debugImplementation(libs.compose.ui.test.manifest)
 
@@ -95,7 +98,6 @@ dependencies {
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.storage)
-    implementation(libs.firebase.analytics)
 
     // Room
     implementation(libs.room.runtime)

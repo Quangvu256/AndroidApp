@@ -8,26 +8,30 @@ import com.example.androidapp.data.local.dao.PendingSyncDao
 import com.example.androidapp.data.local.dao.QuestionDao
 import com.example.androidapp.data.local.dao.QuizDao
 import com.example.androidapp.data.local.dao.UserDao
+import com.example.androidapp.data.network.NetworkMonitor
+import com.example.androidapp.data.sync.SyncManager
 import com.example.androidapp.domain.repository.AttemptRepository
 import com.example.androidapp.domain.repository.AuthRepository
+import com.example.androidapp.domain.repository.PoolRepository
+import com.example.androidapp.domain.repository.QuestionRepository
 import com.example.androidapp.domain.repository.QuizRepository
+import com.example.androidapp.domain.repository.SearchRepository
+import com.example.androidapp.domain.repository.ShareCodeRepository
+import com.example.androidapp.domain.repository.StorageRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 
 /**
  * Application-wide dependency injection container interface.
- * Provides access to all app dependencies.
  */
 interface AppContainer {
     val context: Context
 
-    // Firebase
     val firebaseAuth: FirebaseAuth
     val firebaseFirestore: FirebaseFirestore
     val firebaseStorage: FirebaseStorage
 
-    // Database
     val appDatabase: AppDatabase
     val quizDao: QuizDao
     val questionDao: QuestionDao
@@ -36,8 +40,15 @@ interface AppContainer {
     val userDao: UserDao
     val pendingSyncDao: PendingSyncDao
 
-    // Repositories
+    val networkMonitor: NetworkMonitor
+    val syncManager: SyncManager
+
     val authRepository: AuthRepository
     val quizRepository: QuizRepository
     val attemptRepository: AttemptRepository
+    val questionRepository: QuestionRepository
+    val shareCodeRepository: ShareCodeRepository
+    val poolRepository: PoolRepository
+    val storageRepository: StorageRepository
+    val searchRepository: SearchRepository
 }

@@ -10,6 +10,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.WifiOff
 import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material3.*
@@ -47,6 +48,7 @@ import com.example.androidapp.ui.theme.PlayfairDisplayFamily
  *
  * @param onNavigateToQuiz Callback to navigate to quiz detail screen.
  * @param onNavigateToSearch Callback to navigate to search screen.
+ * @param onNavigateToEditQuiz Callback to navigate to the edit screen for a draft quiz.
  * @param modifier Modifier for styling.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -54,6 +56,7 @@ import com.example.androidapp.ui.theme.PlayfairDisplayFamily
 fun HomeScreen(
     onNavigateToQuiz: (String) -> Unit,
     onNavigateToSearch: () -> Unit,
+    onNavigateToEditQuiz: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val container = LocalAppContainer
@@ -157,6 +160,11 @@ fun HomeScreen(
                     MyQuizListItem(
                         quiz = quiz,
                         onClick = { onNavigateToQuiz(quiz.id) },
+                        onEditClick = if (!quiz.isPublic) {
+                            { onNavigateToEditQuiz(quiz.id) }
+                        } else {
+                            null
+                        },
                         showDivider = index < uiState.myQuizzes.size - 1,
                         modifier = Modifier.padding(horizontal = 24.dp)
                     )
@@ -435,11 +443,27 @@ private fun RecentlyPlayedCard(
     }
 }
 
+/**
+ * A single row item representing one of the current user's quizzes in the Home screen.
+ * Displays a 70dp thumbnail, quiz title, question count, and a trailing chevron icon,
+ * consistent with the style used in [com.example.androidapp.ui.components.quiz.QuizCard].
+ *
+ * For draft quizzes ([Quiz.isPublic] == false) an additional edit [IconButton] is shown
+ * so the user can navigate directly to the edit screen.
+ *
+ * @param quiz The [Quiz] data to display.
+ * @param onClick Callback invoked when the row is tapped.
+ * @param showDivider Whether to draw a divider below the row.
+ * @param onEditClick Optional callback invoked when the edit button is tapped.
+ *   Pass a non-null value only for draft quizzes.
+ * @param modifier Modifier for styling.
+ */
 @Composable
 private fun MyQuizListItem(
     quiz: Quiz,
     onClick: () -> Unit,
     showDivider: Boolean,
+    onEditClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
@@ -449,8 +473,23 @@ private fun MyQuizListItem(
                 .clickable(onClick = onClick)
                 .padding(vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            // Thumbnail
+            Box(
+                modifier = Modifier
+                    .size(70.dp)
+                    .clip(MaterialTheme.shapes.extraSmall)
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+            ) {
+                AsyncImage(
+                    model = quiz.thumbnailUrl,
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+            }
+
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = quiz.title,
@@ -470,6 +509,16 @@ private fun MyQuizListItem(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
+            if (onEditClick != null) {
+                IconButton(onClick = onEditClick) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = stringResource(R.string.home_quiz_edit_cd),
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
             Icon(
                 imageVector = Icons.Default.ChevronRight,
                 contentDescription = null,
@@ -485,4 +534,3 @@ private fun MyQuizListItem(
         }
     }
 }
-
